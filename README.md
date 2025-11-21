@@ -8,8 +8,13 @@
 falling/
 ├── index.html          # 游戏主页面
 ├── game.js             # 游戏逻辑代码
+├── i18n.js             # 多语言支持系统
 ├── README.md           # 项目说明文档
+├── RELEASE_GUIDE.md    # 应用发布指南
 ├── package.json        # Node.js 依赖配置
+├── capacitor.config.json  # Capacitor 移动端配置
+├── resources/          # 应用资源文件夹
+│   └── ASSETS_README.md   # 图标和启动画面指南
 └── .gitignore         # Git 忽略文件配置
 ```
 
@@ -20,6 +25,18 @@ falling/
 - 小球可以落在平台上休息
 - 当小球触碰到屏幕上边界时游戏失败
 - 目标：尽可能下落更远的距离
+
+## 多语言支持
+
+游戏支持以下语言：
+- 🇨🇳 简体中文
+- 🇹🇼 繁体中文
+- 🇺🇸 英语
+- 🇯🇵 日语
+
+**自动检测**：游戏会自动检测系统语言并显示相应的语言界面。
+
+**手动切换**：点击游戏界面右上角的 🌐 语言按钮可以切换语言。语言设置会自动保存在本地。
 
 ## 如何运行
 
@@ -54,22 +71,42 @@ npx http-server -p 8000
 
 ## 打包成手机APP
 
-待完成游戏开发后，使用 Capacitor 打包：
+项目已配置 Capacitor，可以打包成 iOS 和 Android 应用。
+
+### 快速开始
 
 ```bash
-# 安装 Capacitor
-npm init
-npm install @capacitor/core @capacitor/cli
-npx cap init
+# 1. 安装依赖
+npm install
 
-# 添加平台
-npx cap add ios
-npx cap add android
+# 2. 添加平台
+npx cap add ios      # 需要 Mac 和 Xcode
+npx cap add android  # 需要 Android Studio
 
-# 打包和运行
-npx cap copy
-npx cap open ios    # 或 android
+# 3. 生成应用图标和启动画面（可选）
+# 先准备 resources/icon.png 和 resources/splash.png
+npm install @capacitor/assets --save-dev
+npx capacitor-assets generate
+
+# 4. 同步文件到原生项目
+npx cap sync
+
+# 5. 打开原生项目进行开发和发布
+npx cap open ios
+npx cap open android
 ```
+
+### 发布到应用商店
+
+详细的发布指南请查看：**[RELEASE_GUIDE.md](./RELEASE_GUIDE.md)**
+
+该指南包含：
+- ✅ iOS App Store 发布完整流程
+- ✅ Google Play 发布完整流程
+- ✅ 应用图标和截图准备指南
+- ✅ 签名配置和构建步骤
+- ✅ 常见问题解决方案
+- ✅ 应用商店优化建议
 
 ## 技术栈
 
@@ -86,6 +123,7 @@ npx cap open ios    # 或 android
 - ✅ 动态平台生成
 - ✅ 距离计分系统
 - ✅ 游戏状态管理（开始/结束/重玩）
+- ✅ 多语言支持（中文简体/繁体、英语、日语）
 
 ## 待优化功能
 
