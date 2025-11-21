@@ -1,0 +1,16 @@
+{
+  "name": "falling",
+  "version": "1.0.0",
+  "description": "一个简单的手机休闲游戏，玩家控制小球在不断下落的过程中躲避触碰屏幕上边界。",
+  "main": "game.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.56.1"
+  }
+}
