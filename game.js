@@ -8,7 +8,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 800 },
+            gravity: { y: 600 }, // 重力适中，让游戏有挑战性
             debug: false
         }
     },
@@ -44,7 +44,7 @@ let dragStartX = 0;
 // 平台生成相关
 let platformSpawnTimer = 0;
 const PLATFORM_SPAWN_INTERVAL = 1500; // 每1.5秒生成一个新平台
-const PLATFORM_RISE_SPEED = 100; // 平台上升速度（像素/秒）
+const PLATFORM_RISE_SPEED = 150; // 平台上升速度（像素/秒）
 let passedPlatforms = 0; // 通过的平台数量
 
 // 游戏区域
@@ -74,6 +74,28 @@ function create() {
     // 创建背景 - 使用渐变色代替
     this.cameras.main.setBackgroundColor('#87CEEB');
 
+    // 创建顶部危险区域（视觉提示）
+    const topDangerZone = this.add.rectangle(
+        GAME_WIDTH / 2,
+        25,
+        GAME_WIDTH,
+        50,
+        0xff0000,
+        0.3
+    );
+    topDangerZone.setDepth(-1);
+
+    // 创建底部危险区域（视觉提示）
+    const bottomDangerZone = this.add.rectangle(
+        GAME_WIDTH / 2,
+        GAME_HEIGHT - 25,
+        GAME_WIDTH,
+        50,
+        0xff0000,
+        0.3
+    );
+    bottomDangerZone.setDepth(-1);
+
     // 创建云朵装饰（用于显示背景移动效果）
     createClouds(this);
 
@@ -95,6 +117,9 @@ function create() {
     player.setBounce(0);
     player.setCollideWorldBounds(true); // 开启边界碰撞，用于检测触顶
     player.setDragX(100);
+
+    // 设置合理的最大速度上限（防止速度过快）
+    player.body.setMaxVelocity(300, 200);
 
     // 添加碰撞检测
     this.physics.add.collider(player, platforms, onPlayerLandOnPlatform, null, this);
@@ -160,8 +185,15 @@ function update(time, delta) {
         }
     });
 
-    // 检查是否触碰到屏幕上边界（失败条件）
-    if (player.y <= 35) { // 小球半径15 + 顶部安全距离20
+    // 检查是否触碰到屏幕边界（失败条件）
+    // 顶部：被平台推到顶部
+    if (player.y <= 35) {
+        triggerGameOver(this);
+        return;
+    }
+
+    // 底部：掉落太低
+    if (player.y >= GAME_HEIGHT - 50) { // 距离底部50像素的死亡线
         triggerGameOver(this);
         return;
     }
