@@ -40,6 +40,8 @@ let gameOverText;
 let restartButton;
 let isDragging = false;
 let dragStartX = 0;
+let languageButton;
+let currentScene; // 保存当前场景引用
 
 // 平台生成相关
 let platformSpawnTimer = 0;
@@ -70,6 +72,9 @@ function preload() {
 function create() {
     GAME_WIDTH = this.scale.width;
     GAME_HEIGHT = this.scale.height;
+
+    // 保存场景引用
+    currentScene = this;
 
     // 创建背景 - 使用渐变色代替
     this.cameras.main.setBackgroundColor('#87CEEB');
@@ -125,7 +130,7 @@ function create() {
     this.physics.add.collider(player, platforms, onPlayerLandOnPlatform, null, this);
 
     // 创建UI
-    scoreText = this.add.text(16, 16, '距离: 0m', {
+    scoreText = this.add.text(16, 16, i18n.t('score') + ': 0', {
         fontSize: '24px',
         fill: '#fff',
         fontStyle: 'bold',
@@ -135,7 +140,7 @@ function create() {
     scoreText.setScrollFactor(0);
     scoreText.setDepth(100);
 
-    startText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, '点击屏幕开始\n\n左右拖动控制小球', {
+    startText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, i18n.t('tapToStart') + '\n\n' + i18n.t('dragToControl'), {
         fontSize: '32px',
         fill: '#fff',
         fontStyle: 'bold',
@@ -146,6 +151,25 @@ function create() {
     startText.setOrigin(0.5);
     startText.setScrollFactor(0);
     startText.setDepth(100);
+
+    // 语言切换按钮
+    languageButton = this.add.text(GAME_WIDTH - 16, 16, '🌐 ' + i18n.getCurrentLanguageName(), {
+        fontSize: '20px',
+        fill: '#fff',
+        fontStyle: 'bold',
+        stroke: '#000',
+        strokeThickness: 3,
+        backgroundColor: '#00000066',
+        padding: { x: 10, y: 5 }
+    });
+    languageButton.setOrigin(1, 0);
+    languageButton.setScrollFactor(0);
+    languageButton.setDepth(100);
+    languageButton.setInteractive({ useHandCursor: true });
+
+    languageButton.on('pointerdown', () => {
+        cycleLanguage();
+    });
 
     // 不设置相机跟随，相机固定不动
 
@@ -200,7 +224,7 @@ function update(time, delta) {
 
     // 更新分数（基于通过的平台数量和时间）
     score = passedPlatforms * 10;
-    scoreText.setText('分数: ' + score);
+    scoreText.setText(i18n.t('score') + ': ' + score);
 
     // 键盘控制（测试用）
     if (cursors.left.isDown) {
@@ -305,7 +329,7 @@ function triggerGameOver(scene) {
     scene.physics.pause();
 
     // 显示游戏结束文字
-    gameOverText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100, '游戏结束!', {
+    gameOverText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100, i18n.t('gameOver'), {
         fontSize: '48px',
         fill: '#ff0000',
         fontStyle: 'bold',
@@ -316,7 +340,7 @@ function triggerGameOver(scene) {
     gameOverText.setScrollFactor(0);
     gameOverText.setDepth(100);
 
-    const finalScoreText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '最终分数: ' + score, {
+    const finalScoreText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, i18n.t('finalScore') + ': ' + score, {
         fontSize: '32px',
         fill: '#fff',
         fontStyle: 'bold',
@@ -328,7 +352,7 @@ function triggerGameOver(scene) {
     finalScoreText.setDepth(100);
 
     // 重新开始按钮
-    restartButton = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 80, '点击重新开始', {
+    restartButton = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 80, i18n.t('tapToRestart'), {
         fontSize: '28px',
         fill: '#00ff00',
         fontStyle: 'bold',
@@ -388,4 +412,24 @@ function updateClouds(scene, deltaSeconds) {
             cloud.x = Phaser.Math.Between(0, GAME_WIDTH);
         }
     });
+}
+
+// 切换语言
+function cycleLanguage() {
+    const languages = ['zh', 'zh-TW', 'en', 'ja'];
+    const currentLang = i18n.getCurrentLanguage();
+    const currentIndex = languages.indexOf(currentLang);
+    const nextIndex = (currentIndex + 1) % languages.length;
+    const nextLang = languages[nextIndex];
+
+    // 切换语言
+    i18n.setLanguage(nextLang);
+
+    // 重启游戏场景以应用新语言
+    if (currentScene) {
+        currentScene.scene.restart();
+        resetGame();
+    }
+
+    console.log('Language switched to:', nextLang);
 }
