@@ -1,0 +1,32 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="1024" height="1024" fill="#1a1a2e" rx="180"/>
+
+  <!-- 渐变定义 -->
+  <defs>
+    <linearGradient id="ballGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="platformGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 平台 -->
+  <rect x="312" y="650" width="400" height="30" fill="url(#platformGradient)" rx="15"/>
+  <rect x="212" y="800" width="300" height="30" fill="url(#platformGradient)" rx="15"/>
+
+  <!-- 下落的小球 -->
+  <circle cx="512" cy="400" r="120" fill="url(#ballGradient)"/>
+
+  <!-- 小球高光效果 -->
+  <ellipse cx="472" cy="360" rx="40" ry="50" fill="white" opacity="0.3"/>
+
+  <!-- 速度线条（表现下落感）-->
+  <line x1="512" y1="200" x2="512" y2="150" stroke="#4facfe" stroke-width="8" opacity="0.5" stroke-linecap="round"/>
+  <line x1="480" y1="240" x2="470" y2="180" stroke="#4facfe" stroke-width="6" opacity="0.3" stroke-linecap="round"/>
+  <line x1="544" y1="240" x2="554" y2="180" stroke="#4facfe" stroke-width="6" opacity="0.3" stroke-linecap="round"/>
+</svg>

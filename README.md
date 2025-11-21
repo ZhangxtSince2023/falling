@@ -54,22 +54,42 @@ npx http-server -p 8000
 
 ## 打包成手机APP
 
-待完成游戏开发后，使用 Capacitor 打包：
+项目已配置 Capacitor，可以打包成 iOS 和 Android 应用。
+
+### 快速开始
 
 ```bash
-# 安装 Capacitor
-npm init
-npm install @capacitor/core @capacitor/cli
-npx cap init
+# 1. 安装依赖
+npm install
 
-# 添加平台
-npx cap add ios
-npx cap add android
+# 2. 添加平台
+npx cap add ios      # 需要 Mac 和 Xcode
+npx cap add android  # 需要 Android Studio
 
-# 打包和运行
-npx cap copy
-npx cap open ios    # 或 android
+# 3. 生成应用图标和启动画面（可选）
+# 先准备 resources/icon.png 和 resources/splash.png
+npm install @capacitor/assets --save-dev
+npx capacitor-assets generate
+
+# 4. 同步文件到原生项目
+npx cap sync
+
+# 5. 打开原生项目进行开发和发布
+npx cap open ios
+npx cap open android
 ```
+
+### 发布到应用商店
+
+详细的发布指南请查看：**[RELEASE_GUIDE.md](./RELEASE_GUIDE.md)**
+
+该指南包含：
+- ✅ iOS App Store 发布完整流程
+- ✅ Google Play 发布完整流程
+- ✅ 应用图标和截图准备指南
+- ✅ 签名配置和构建步骤
+- ✅ 常见问题解决方案
+- ✅ 应用商店优化建议
 
 ## 技术栈
 

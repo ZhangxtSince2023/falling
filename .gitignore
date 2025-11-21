@@ -35,15 +35,17 @@ coverage/
 .nyc_output/
 test-results/
 playwright-report/
-*.png
-*.jpg
-*.jpeg
 
 # Capacitor (mobile build)
 android/
 ios/
-capacitor.config.json
-capacitor.config.ts
+.capacitor/
+
+# Resource files (icons and splash screens - large files)
+resources/*.png
+resources/*.jpg
+resources/*.jpeg
+!resources/ASSETS_README.md
 
 # Temporary files
 *.tmp
