@@ -9,6 +9,8 @@ const translations = {
     'zh': {
         distance: '距离',
         score: '分数',
+        difficulty: '难度',
+        level: '级',
         meters: 'm',
         tapToStart: '点击屏幕开始',
         dragToControl: '左右拖动控制小球',
@@ -22,6 +24,8 @@ const translations = {
     'zh-TW': {
         distance: '距離',
         score: '分數',
+        difficulty: '難度',
+        level: '級',
         meters: 'm',
         tapToStart: '點擊屏幕開始',
         dragToControl: '左右拖動控制小球',
@@ -35,6 +39,8 @@ const translations = {
     'en': {
         distance: 'Distance',
         score: 'Score',
+        difficulty: 'Difficulty',
+        level: 'Lv',
         meters: 'm',
         tapToStart: 'Tap to Start',
         dragToControl: 'Drag to Move',
@@ -48,6 +54,8 @@ const translations = {
     'ja': {
         distance: '距離',
         score: 'スコア',
+        difficulty: '難易度',
+        level: 'Lv',
         meters: 'm',
         tapToStart: 'タップして開始',
         dragToControl: '左右にドラッグして操作',
