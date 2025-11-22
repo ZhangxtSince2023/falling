@@ -35,7 +35,6 @@ let background;
 let clouds = [];
 let score = 0;
 let scoreText;
-let difficultyText;
 let startText;
 let gameOverText;
 let restartButton;
@@ -49,7 +48,7 @@ let platformSpawnTimer = 0;
 let passedPlatforms = 0; // 通过的平台数量
 let currentDifficulty; // 当前难度参数
 
-// 难度系统配置
+// 难度系统配置 - 使用连续平滑函数
 const DIFFICULTY_CONFIG = {
     // 基础参数
     BASE_SPAWN_INTERVAL: 1500,      // 基础生成间隔（毫秒）
@@ -57,50 +56,42 @@ const DIFFICULTY_CONFIG = {
     BASE_PLATFORM_WIDTH_MIN: 80,    // 基础最小宽度
     BASE_PLATFORM_WIDTH_MAX: 150,   // 基础最大宽度
 
-    // 难度增长参数
-    SCORE_PER_LEVEL: 50,             // 每50分提升一个难度级别
-    MAX_DIFFICULTY_LEVEL: 10,        // 最大难度级别
-
-    // 速度增长（每级增加10%）
-    SPEED_INCREASE_PER_LEVEL: 0.1,
+    // 难度增长参数（平滑渐进）
     MAX_SPEED_MULTIPLIER: 2.0,       // 最大速度为基础的2倍
-
-    // 生成间隔减少（每级减少8%）
-    INTERVAL_DECREASE_PER_LEVEL: 0.08,
     MIN_INTERVAL_MULTIPLIER: 0.4,    // 最小间隔为基础的40%
+    MIN_WIDTH_MULTIPLIER: 0.5,       // 最小宽度为基础的50%
 
-    // 平台宽度减少（每级减少5%）
-    WIDTH_DECREASE_PER_LEVEL: 0.05,
-    MIN_WIDTH_MULTIPLIER: 0.5        // 最小宽度为基础的50%
+    // 难度增长曲线参数
+    SPEED_GROWTH_RATE: 0.002,        // 速度增长率（对数曲线）
+    INTERVAL_DECAY_RATE: 0.0015,     // 间隔减少率
+    WIDTH_DECAY_RATE: 0.001          // 宽度减少率
 };
 
-// 计算当前难度参数
+// 计算当前难度参数 - 使用平滑的数学函数
 function getDifficulty(currentScore) {
-    const level = Math.min(
-        Math.floor(currentScore / DIFFICULTY_CONFIG.SCORE_PER_LEVEL),
-        DIFFICULTY_CONFIG.MAX_DIFFICULTY_LEVEL
-    );
+    // 使用对数函数创建平滑的难度曲线
+    // 对数函数的特点：开始增长较快，后期增长变缓，符合游戏难度曲线
+    const normalizedScore = currentScore / 100; // 归一化分数
 
-    // 计算速度倍数（递增）
+    // 速度增长：使用对数函数 1 + ln(1 + score * rate)
     const speedMultiplier = Math.min(
-        1 + (level * DIFFICULTY_CONFIG.SPEED_INCREASE_PER_LEVEL),
+        1 + Math.log(1 + normalizedScore * DIFFICULTY_CONFIG.SPEED_GROWTH_RATE * 100) * 0.15,
         DIFFICULTY_CONFIG.MAX_SPEED_MULTIPLIER
     );
 
-    // 计算生成间隔倍数（递减）
+    // 生成间隔减少：使用指数衰减函数
     const intervalMultiplier = Math.max(
-        1 - (level * DIFFICULTY_CONFIG.INTERVAL_DECREASE_PER_LEVEL),
+        1 / (1 + normalizedScore * DIFFICULTY_CONFIG.INTERVAL_DECAY_RATE * 100),
         DIFFICULTY_CONFIG.MIN_INTERVAL_MULTIPLIER
     );
 
-    // 计算平台宽度倍数（递减）
+    // 平台宽度减少：使用平方根函数创建更温和的减少
     const widthMultiplier = Math.max(
-        1 - (level * DIFFICULTY_CONFIG.WIDTH_DECREASE_PER_LEVEL),
+        1 - Math.sqrt(normalizedScore * DIFFICULTY_CONFIG.WIDTH_DECAY_RATE) * 0.5,
         DIFFICULTY_CONFIG.MIN_WIDTH_MULTIPLIER
     );
 
     return {
-        level: level,
         riseSpeed: DIFFICULTY_CONFIG.BASE_RISE_SPEED * speedMultiplier,
         spawnInterval: DIFFICULTY_CONFIG.BASE_SPAWN_INTERVAL * intervalMultiplier,
         platformWidthMin: DIFFICULTY_CONFIG.BASE_PLATFORM_WIDTH_MIN * widthMultiplier,
@@ -199,17 +190,6 @@ function create() {
     scoreText.setScrollFactor(0);
     scoreText.setDepth(100);
 
-    // 难度等级显示
-    difficultyText = this.add.text(16, 48, i18n.t('difficulty') + ': ' + i18n.t('level') + '0', {
-        fontSize: '20px',
-        fill: '#FFD700',
-        fontStyle: 'bold',
-        stroke: '#000',
-        strokeThickness: 3
-    });
-    difficultyText.setScrollFactor(0);
-    difficultyText.setDepth(100);
-
     startText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, i18n.t('tapToStart') + '\n\n' + i18n.t('dragToControl'), {
         fontSize: '32px',
         fill: '#fff',
@@ -272,7 +252,7 @@ function update(time, delta) {
     // 调试：每2秒打印一次平台信息
     if (Math.floor(time / 2000) !== Math.floor((time - delta) / 2000)) {
         if (platformChildren.length > 0) {
-            console.log('平台数量:', platformChildren.length, '第一个平台Y:', platformChildren[0].y, '难度等级:', currentDifficulty.level);
+            console.log('平台数量:', platformChildren.length, '第一个平台Y:', platformChildren[0].y);
         }
     }
 
@@ -298,7 +278,6 @@ function update(time, delta) {
     // 更新分数（基于通过的平台数量和时间）
     score = passedPlatforms * 10;
     scoreText.setText(i18n.t('score') + ': ' + score);
-    difficultyText.setText(i18n.t('difficulty') + ': ' + i18n.t('level') + currentDifficulty.level);
 
     // 键盘控制（测试用）
     if (cursors.left.isDown) {
