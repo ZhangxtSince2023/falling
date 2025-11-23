@@ -5,7 +5,12 @@
   "main": "game.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "echo 'Build complete - files already in webDir'",
+    "clean": "rm -rf dist",
+    "build:web": "bash build-web.sh",
+    "build:wechat": "bash build-wechat.sh",
+    "build:all": "npm run build:web && npm run build:wechat",
+    "build": "npm run build:all",
+    "serve": "npx http-server dist/web -p 8080",
     "cap:sync": "npx cap sync",
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",

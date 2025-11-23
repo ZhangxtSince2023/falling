@@ -1,0 +1,14 @@
+{
+  "description": "下落小球 - 微信小游戏版本",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "newFeature": true
+  },
+  "compileType": "miniprogram",
+  "appid": "touristappid",
+  "projectname": "falling-game",
+  "condition": {}
+}
