@@ -4,7 +4,7 @@ const config = {
     width: 375,
     height: 667,
     parent: 'game-container',
-    backgroundColor: '#87CEEB',
+    backgroundColor: '#87CEEB', // 加载背景图前的默认颜色
     physics: {
         default: 'arcade',
         arcade: {
@@ -103,19 +103,23 @@ let GAME_HEIGHT;
 let GAME_WIDTH;
 
 function preload() {
-    // 创建小球纹理
-    const ballGraphics = this.add.graphics();
-    ballGraphics.fillStyle(0xFF6B6B, 1);
-    ballGraphics.fillCircle(15, 15, 15);
-    ballGraphics.generateTexture('ball', 30, 30);
-    ballGraphics.destroy();
+    // 加载玩家球素材
+    this.load.image('ball', 'assets/player/ball.png');
+    this.load.image('ball_blue', 'assets/player/ball_blue.png');
+    this.load.image('ball_green', 'assets/player/ball_green.png');
+    this.load.image('ball_yellow', 'assets/player/ball_yellow.png');
 
-    // 创建平台纹理
-    const platformGraphics = this.add.graphics();
-    platformGraphics.fillStyle(0x8B4513, 1);
-    platformGraphics.fillRect(0, 0, 120, 15);
-    platformGraphics.generateTexture('platform', 120, 15);
-    platformGraphics.destroy();
+    // 加载平台素材
+    this.load.image('platform_wood', 'assets/platforms/platform_wood.png');
+    this.load.image('platform_stone', 'assets/platforms/platform_stone.png');
+    this.load.image('platform_metal', 'assets/platforms/platform_metal.png');
+
+    // 加载背景素材
+    this.load.image('background', 'assets/backgrounds/colored_grass.png');
+
+    // 加载道具素材（未来可用）
+    this.load.image('coinGold', 'assets/items/coinGold.png');
+    this.load.image('starGold', 'assets/items/starGold.png');
 }
 
 function create() {
@@ -125,8 +129,10 @@ function create() {
     // 保存场景引用
     currentScene = this;
 
-    // 创建背景 - 使用渐变色代替
-    this.cameras.main.setBackgroundColor('#87CEEB');
+    // 创建背景图片
+    const bg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'background');
+    bg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
+    bg.setDepth(-10);
 
     // 创建顶部危险区域（视觉提示）
     const topDangerZone = this.add.rectangle(
@@ -168,9 +174,14 @@ function create() {
 
     // 创建小球（玩家）- 在屏幕中心偏下位置
     player = this.physics.add.sprite(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100, 'ball');
+    player.setScale(0.5); // 缩放到合适大小
     player.setBounce(0);
     player.setCollideWorldBounds(true); // 开启边界碰撞，用于检测触顶
     player.setDragX(100);
+
+    // 更新物理体大小以匹配缩放后的精灵
+    player.body.setSize(player.width * 0.8, player.height * 0.8);
+    player.body.setOffset(player.width * 0.1, player.height * 0.1);
 
     // 设置合理的最大速度上限（防止速度过快）
     player.body.setMaxVelocity(300, 200);
@@ -298,6 +309,9 @@ function update(time, delta) {
     updateClouds(this, deltaSeconds, currentDifficulty.riseSpeed);
 }
 
+// 平台纹理列表
+const PLATFORM_TEXTURES = ['platform_wood', 'platform_stone', 'platform_metal'];
+
 // 创建平台
 function createPlatform(scene, x, y, difficulty = null) {
     // 如果没有提供难度参数，使用基础难度
@@ -307,8 +321,15 @@ function createPlatform(scene, x, y, difficulty = null) {
         Math.floor(diff.platformWidthMin),
         Math.floor(diff.platformWidthMax)
     );
-    const platform = platforms.create(x, y, 'platform');
-    platform.setScale(width / 120, 1); // 调整宽度
+
+    // 随机选择平台纹理
+    const textureKey = Phaser.Math.RND.pick(PLATFORM_TEXTURES);
+    const platform = platforms.create(x, y, textureKey);
+
+    // 根据目标宽度计算缩放比例（原始平台图片约70x70）
+    const scaleX = width / 70;
+    const scaleY = 0.25; // 让平台更扁一些
+    platform.setScale(scaleX, scaleY);
 
     // 确保物理体可以移动
     if (platform.body) {
@@ -485,18 +506,18 @@ function resetGame() {
     clouds = [];
 }
 
-// 创建云朵
+// 创建云朵装饰（补充背景的云）
 function createClouds(scene) {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
         const cloud = scene.add.ellipse(
             Phaser.Math.Between(0, GAME_WIDTH),
-            Phaser.Math.Between(100, GAME_HEIGHT - 100),
-            Phaser.Math.Between(60, 100),
-            40,
+            Phaser.Math.Between(50, GAME_HEIGHT / 2), // 只在上半部分
+            Phaser.Math.Between(40, 80),
+            Phaser.Math.Between(20, 35),
             0xffffff,
-            0.6
+            0.4 // 更透明，作为背景补充
         );
-        cloud.setDepth(-1); // 让云朵在最底层
+        cloud.setDepth(-5); // 在背景之上，其他元素之下
         clouds.push(cloud);
     }
 }
