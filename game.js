@@ -35,7 +35,6 @@ let background;
 let clouds = [];
 let score = 0;
 let scoreText;
-let startText;
 let gameOverText;
 let restartButton;
 let isDragging = false;
@@ -190,18 +189,6 @@ function create() {
     scoreText.setScrollFactor(0);
     scoreText.setDepth(100);
 
-    startText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, i18n.t('tapToStart') + '\n\n' + i18n.t('dragToControl'), {
-        fontSize: '32px',
-        fill: '#fff',
-        fontStyle: 'bold',
-        align: 'center',
-        stroke: '#000',
-        strokeThickness: 6
-    });
-    startText.setOrigin(0.5);
-    startText.setScrollFactor(0);
-    startText.setDepth(100);
-
     // 语言切换按钮
     languageButton = this.add.text(GAME_WIDTH - 16, 16, '🌐 ' + i18n.getCurrentLanguageName(), {
         fontSize: '20px',
@@ -230,6 +217,9 @@ function create() {
 
     // 键盘控制（用于PC测试）
     cursors = this.input.keyboard.createCursorKeys();
+
+    // 显示开始游戏提示
+    showStartScreen(this);
 }
 
 function update(time, delta) {
@@ -344,11 +334,6 @@ function onPlayerLandOnPlatform(player, platform) {
 
 // 触摸开始
 function onPointerDown(pointer) {
-    if (!gameStarted) {
-        startGame(this);
-        return;
-    }
-
     if (gameOver) {
         return;
     }
@@ -375,10 +360,66 @@ function onPointerUp(pointer) {
     isDragging = false;
 }
 
+// 显示开始界面
+let startScreenElements = [];
+
+function showStartScreen(scene) {
+    // 游戏标题
+    const titleText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 80, i18n.t('gameTitle') || '坠落小球', {
+        fontSize: '42px',
+        fill: '#fff',
+        fontStyle: 'bold',
+        stroke: '#000',
+        strokeThickness: 6
+    });
+    titleText.setOrigin(0.5);
+    titleText.setDepth(100);
+    startScreenElements.push(titleText);
+
+    // 点击开始提示
+    const startText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20, i18n.t('tapToStart') || '点击屏幕开始游戏', {
+        fontSize: '28px',
+        fill: '#00ff00',
+        fontStyle: 'bold',
+        stroke: '#000',
+        strokeThickness: 4
+    });
+    startText.setOrigin(0.5);
+    startText.setDepth(100);
+    startScreenElements.push(startText);
+
+    // 添加闪烁效果
+    scene.tweens.add({
+        targets: startText,
+        alpha: 0.3,
+        duration: 800,
+        yoyo: true,
+        repeat: -1
+    });
+
+    // 暂停物理引擎，等待开始
+    scene.physics.pause();
+
+    // 点击任意位置开始游戏
+    scene.input.once('pointerdown', () => {
+        startGame(scene);
+    });
+}
+
 // 开始游戏
 function startGame(scene) {
+    // 移除开始界面元素
+    startScreenElements.forEach(element => {
+        if (element && element.destroy) {
+            element.destroy();
+        }
+    });
+    startScreenElements = [];
+
+    // 恢复物理引擎
+    scene.physics.resume();
+
     gameStarted = true;
-    startText.setVisible(false);
 }
 
 // 游戏失败
