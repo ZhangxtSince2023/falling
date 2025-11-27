@@ -309,9 +309,6 @@ function update(time, delta) {
     updateClouds(this, deltaSeconds, currentDifficulty.riseSpeed);
 }
 
-// 平台纹理列表
-const PLATFORM_TEXTURES = ['platform_wood', 'platform_stone', 'platform_metal'];
-
 // 创建平台
 function createPlatform(scene, x, y, difficulty = null) {
     // 如果没有提供难度参数，使用基础难度
@@ -322,9 +319,8 @@ function createPlatform(scene, x, y, difficulty = null) {
         Math.floor(diff.platformWidthMax)
     );
 
-    // 随机选择平台纹理
-    const textureKey = Phaser.Math.RND.pick(PLATFORM_TEXTURES);
-    const platform = platforms.create(x, y, textureKey);
+    // 使用统一的石质平台纹理
+    const platform = platforms.create(x, y, 'platform_stone');
 
     // 根据目标宽度计算缩放比例（原始平台图片约70x70）
     const scaleX = width / 70;
@@ -353,6 +349,11 @@ function onPlayerLandOnPlatform(player, platform) {
     // 玩家站立在平台上
 }
 
+// 触摸控制变量
+let targetX = 0; // 目标X位置
+let lastPointerX = 0;
+let pointerVelocity = 0;
+
 // 触摸开始
 function onPointerDown(pointer) {
     if (gameOver) {
@@ -360,7 +361,9 @@ function onPointerDown(pointer) {
     }
 
     isDragging = true;
-    dragStartX = pointer.x;
+    lastPointerX = pointer.x;
+    targetX = player.x;
+    pointerVelocity = 0;
 }
 
 // 触摸移动
@@ -369,16 +372,33 @@ function onPointerMove(pointer) {
         return;
     }
 
-    const deltaX = pointer.x - dragStartX;
-    const velocityX = deltaX * 8; // 灵敏度
-    player.body.setVelocityX(velocityX);
+    // 计算手指移动的距离
+    const deltaX = pointer.x - lastPointerX;
+    lastPointerX = pointer.x;
 
-    dragStartX = pointer.x;
+    // 直接将移动距离应用到目标位置
+    targetX += deltaX;
+
+    // 限制在屏幕范围内
+    targetX = Phaser.Math.Clamp(targetX, 20, GAME_WIDTH - 20);
+
+    // 计算需要的速度来追踪目标位置（使用较大的系数使响应更快）
+    const diff = targetX - player.x;
+    pointerVelocity = diff * 15; // 快速响应系数
+
+    // 限制最大速度
+    pointerVelocity = Phaser.Math.Clamp(pointerVelocity, -400, 400);
+
+    player.body.setVelocityX(pointerVelocity);
 }
 
 // 触摸结束
-function onPointerUp(pointer) {
+function onPointerUp() {
     isDragging = false;
+    // 保留一部分惯性速度，让停止更自然
+    if (player && player.body) {
+        player.body.setVelocityX(pointerVelocity * 0.5);
+    }
 }
 
 // 显示开始界面
@@ -503,6 +523,9 @@ function resetGame() {
     passedPlatforms = 0;
     platformSpawnTimer = 0;
     isDragging = false;
+    targetX = 0;
+    lastPointerX = 0;
+    pointerVelocity = 0;
     clouds = [];
 }
 
