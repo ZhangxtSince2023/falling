@@ -4,7 +4,7 @@ const config = {
     width: 375,
     height: 667,
     parent: 'game-container',
-    backgroundColor: '#87CEEB', // 加载背景图前的默认颜色
+    backgroundColor: '#FF6B9D', // Helix Jump 风格的粉色背景
     physics: {
         default: 'arcade',
         arcade: {
@@ -22,6 +22,15 @@ const config = {
         autoCenter: Phaser.Scale.CENTER_BOTH
     }
 };
+
+// Helix Jump 风格的颜色配置
+const COLOR_SCHEMES = [
+    { primary: 0xFF6B9D, secondary: 0xFFA06B }, // 粉色到橙色
+    { primary: 0x6B9DFF, secondary: 0x9D6BFF }, // 蓝色到紫色
+    { primary: 0xFFD700, secondary: 0xFF69B4 }, // 金色到粉色
+    { primary: 0x00CED1, secondary: 0x9370DB }, // 青色到紫色
+    { primary: 0xFF4500, secondary: 0xFFD700 }, // 橙红到金色
+];
 
 const game = new Phaser.Game(config);
 
@@ -41,11 +50,13 @@ let isDragging = false;
 let dragStartX = 0;
 let languageButton;
 let currentScene; // 保存当前场景引用
+let wasOnGround = false; // 球在上一帧是否在平台上
 
 // 平台生成相关
 let platformSpawnTimer = 0;
 let passedPlatforms = 0; // 通过的平台数量
 let currentDifficulty; // 当前难度参数
+let currentColorIndex = 0; // 当前使用的颜色方案索引
 
 // 难度系统配置 - 使用连续平滑函数
 const DIFFICULTY_CONFIG = {
@@ -102,24 +113,35 @@ function getDifficulty(currentScore) {
 let GAME_HEIGHT;
 let GAME_WIDTH;
 
+// 创建程序化的球体纹理（带渐变效果）
+function createBallTexture(scene, key, color1, color2) {
+    const graphics = scene.make.graphics({ x: 0, y: 0, add: false });
+    const radius = 32;
+
+    // 创建渐变填充
+    for (let i = 0; i < radius; i++) {
+        const alpha = i / radius;
+        const color = Phaser.Display.Color.Interpolate.ColorWithColor(
+            Phaser.Display.Color.ValueToColor(color1),
+            Phaser.Display.Color.ValueToColor(color2),
+            radius,
+            i
+        );
+        const hexColor = Phaser.Display.Color.GetColor(color.r, color.g, color.b);
+
+        graphics.fillStyle(hexColor, 1 - alpha * 0.3);
+        graphics.fillCircle(radius, radius, radius - i);
+    }
+
+    graphics.generateTexture(key, radius * 2, radius * 2);
+    graphics.destroy();
+}
+
 function preload() {
-    // 加载玩家球素材
-    this.load.image('ball', 'assets/player/ball.png');
-    this.load.image('ball_blue', 'assets/player/ball_blue.png');
-    this.load.image('ball_green', 'assets/player/ball_green.png');
-    this.load.image('ball_yellow', 'assets/player/ball_yellow.png');
+    // 创建程序化的球体纹理（渐变色）
+    createBallTexture(this, 'ball', 0xFF6B9D, 0xFFA06B);
 
-    // 加载平台素材
-    this.load.image('platform_wood', 'assets/platforms/platform_wood.png');
-    this.load.image('platform_stone', 'assets/platforms/platform_stone.png');
-    this.load.image('platform_metal', 'assets/platforms/platform_metal.png');
-
-    // 加载背景素材
-    this.load.image('background', 'assets/backgrounds/colored_grass.png');
-
-    // 加载道具素材（未来可用）
-    this.load.image('coinGold', 'assets/items/coinGold.png');
-    this.load.image('starGold', 'assets/items/starGold.png');
+    // 不需要再加载图片素材了，我们使用程序化图形
 }
 
 function create() {
@@ -129,10 +151,11 @@ function create() {
     // 保存场景引用
     currentScene = this;
 
-    // 创建背景图片
-    const bg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'background');
-    bg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
-    bg.setDepth(-10);
+    // 创建渐变背景（Helix Jump 风格）
+    const graphics = this.add.graphics();
+    graphics.fillGradientStyle(0xFF6B9D, 0xFF6B9D, 0xFFA06B, 0xFFA06B, 1, 1, 1, 1);
+    graphics.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    graphics.setDepth(-10);
 
     // 创建顶部危险区域（视觉提示）
     const topDangerZone = this.add.rectangle(
@@ -244,6 +267,11 @@ function update(time, delta) {
 
     const deltaSeconds = delta / 1000; // 转换为秒
 
+    // 检测球是否离开平台（用于碰撞特效触发）
+    if (player && player.body && !player.body.touching.down) {
+        wasOnGround = false;
+    }
+
     // 根据当前分数计算难度
     currentDifficulty = getDifficulty(score);
 
@@ -318,22 +346,45 @@ function createPlatform(scene, x, y, difficulty = null) {
         Math.floor(diff.platformWidthMin),
         Math.floor(diff.platformWidthMax)
     );
+    const height = 20;
 
-    // 使用统一的石质平台纹理
-    const platform = platforms.create(x, y, 'platform_stone');
+    // 选择颜色方案
+    const colorScheme = COLOR_SCHEMES[currentColorIndex % COLOR_SCHEMES.length];
+    currentColorIndex++;
 
-    // 根据目标宽度计算缩放比例（原始平台图片约70x70）
-    const scaleX = width / 70;
-    const scaleY = 0.25; // 让平台更扁一些
-    platform.setScale(scaleX, scaleY);
+    // 创建渐变矩形平台
+    const graphics = scene.add.graphics();
+
+    // 填充渐变色
+    graphics.fillGradientStyle(
+        colorScheme.primary, colorScheme.secondary,
+        colorScheme.primary, colorScheme.secondary,
+        1, 1, 1, 1
+    );
+    graphics.fillRoundedRect(0, 0, width, height, 10);
+
+    // 添加白色描边，让平台更明显
+    graphics.lineStyle(3, 0xffffff, 0.8);
+    graphics.strokeRoundedRect(0, 0, width, height, 10);
+
+    // 转换为纹理
+    const platformKey = 'platform_' + Math.random();
+    graphics.generateTexture(platformKey, width, height);
+    graphics.destroy();
+
+    // 创建平台精灵
+    const platform = scene.physics.add.sprite(x, y, platformKey);
+    platforms.add(platform);
 
     // 确保物理体可以移动
     if (platform.body) {
         platform.body.allowGravity = false;
         platform.body.immovable = true; // 碰撞时不被推动
+        platform.body.setSize(width, height);
     }
 
     platform.counted = false; // 用于计分标记
+    platform.colorScheme = colorScheme; // 保存颜色方案用于特效
 }
 
 // 生成新平台（从底部）
@@ -346,7 +397,126 @@ function generateNewPlatform(scene) {
 
 // 玩家落在平台上
 function onPlayerLandOnPlatform(player, platform) {
-    // 玩家站立在平台上
+    // 检测球是否刚落到平台上（必须满足三个条件）：
+    // 1. 上一帧不在地面上 (!wasOnGround)
+    // 2. 这一帧接触到平台底部 (player.body.touching.down)
+    // 3. 球正在下落，有向下的速度 (player.body.velocity.y > 50)
+    const isLanding = !wasOnGround &&
+                      player.body.touching.down &&
+                      player.body.velocity.y > 50; // 必须有明显的下落速度
+
+    if (isLanding) {
+        // 计算球和平台的接触点（球的底部）
+        const contactX = player.x;
+        const contactY = player.y + player.displayHeight / 2;
+
+        // 创建碰撞粒子效果（使用接触点位置）
+        createImpactParticles(currentScene, contactX, contactY, platform.colorScheme);
+
+        // 屏幕震动
+        shakeCamera(currentScene);
+
+        // 球体挤压动画
+        squashBallAnimation(currentScene, player);
+
+        // 平台闪烁效果
+        flashPlatform(currentScene, platform);
+
+        // 标记球现在在平台上
+        wasOnGround = true;
+    }
+
+    // 如果球站在平台上（速度很小），也标记为在地面上
+    if (player.body.touching.down && Math.abs(player.body.velocity.y) < 10) {
+        wasOnGround = true;
+    }
+}
+
+// 平台碰撞闪烁效果
+function flashPlatform(scene, platform) {
+    if (!platform || !scene) return;
+
+    // 快速闪白
+    scene.tweens.add({
+        targets: platform,
+        alpha: 0.6,
+        duration: 50,
+        yoyo: true,
+        ease: 'Quad.easeInOut'
+    });
+}
+
+// 创建碰撞粒子效果
+function createImpactParticles(scene, x, y, colorScheme) {
+    if (!colorScheme) {
+        console.error('colorScheme 未定义！使用默认颜色');
+        colorScheme = { primary: 0xFF6B9D, secondary: 0xFFA06B };
+    }
+
+    const particleCount = 25;
+
+    for (let i = 0; i < particleCount; i++) {
+        // 粒子向四周均匀散开
+        const angle = (Math.PI * 2 * i) / particleCount;
+        const speed = Phaser.Math.Between(200, 400);
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+
+        // 创建更大的粒子（使用主色和副色交替）
+        const color = i % 2 === 0 ? colorScheme.primary : colorScheme.secondary;
+        const particleSize = Phaser.Math.Between(5, 10); // 增大粒子
+        const particle = scene.add.circle(x, y, particleSize, color);
+        particle.setAlpha(1);
+        particle.setDepth(100); // 提高深度确保在最上层
+
+        // 粒子动画 - 延长时间让效果更明显
+        scene.tweens.add({
+            targets: particle,
+            x: x + vx * 0.5,
+            y: y + vy * 0.5,
+            alpha: 0,
+            scale: 0.2,
+            duration: 800, // 延长动画时间
+            ease: 'Cubic.easeOut',
+            onComplete: () => {
+                particle.destroy();
+            }
+        });
+    }
+}
+
+// 屏幕震动效果
+function shakeCamera(scene) {
+    if (scene && scene.cameras && scene.cameras.main) {
+        scene.cameras.main.shake(100, 0.005);
+    }
+}
+
+// 球体挤压动画
+function squashBallAnimation(scene, ball) {
+    if (!ball) return;
+
+    // 停止之前的动画
+    scene.tweens.killTweensOf(ball);
+
+    // 挤压效果（纵向压扁，横向拉宽）
+    scene.tweens.add({
+        targets: ball,
+        scaleX: 0.65, // 横向拉宽（从0.5基准）
+        scaleY: 0.35, // 纵向压扁（从0.5基准）
+        duration: 80,
+        ease: 'Quad.easeOut',
+        onComplete: () => {
+            // 弹回原始大小
+            scene.tweens.add({
+                targets: ball,
+                scaleX: 0.5,
+                scaleY: 0.5,
+                duration: 120,
+                ease: 'Elastic.easeOut'
+            });
+        }
+    });
 }
 
 // 触摸控制变量
@@ -527,6 +697,8 @@ function resetGame() {
     lastPointerX = 0;
     pointerVelocity = 0;
     clouds = [];
+    currentColorIndex = 0;
+    wasOnGround = false;
 }
 
 // 创建云朵装饰（补充背景的云）
@@ -538,7 +710,7 @@ function createClouds(scene) {
             Phaser.Math.Between(40, 80),
             Phaser.Math.Between(20, 35),
             0xffffff,
-            0.4 // 更透明，作为背景补充
+            0.2 // 更透明，作为背景补充
         );
         cloud.setDepth(-5); // 在背景之上，其他元素之下
         clouds.push(cloud);
@@ -547,7 +719,7 @@ function createClouds(scene) {
 
 // 更新云朵位置（向上移动）
 function updateClouds(scene, deltaSeconds, riseSpeed) {
-    clouds.forEach((cloud, index) => {
+    clouds.forEach(cloud => {
         // 让云朵向上移动（速度比平台慢，产生视差效果）
         cloud.y -= riseSpeed * 0.5 * deltaSeconds;
 
