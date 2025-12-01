@@ -38,8 +38,20 @@ playwright-report/
 
 # Capacitor (mobile build)
 android/
-ios/
 .capacitor/
+
+# iOS - Keep project but ignore build artifacts and user-specific files
+ios/App/App/public/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+ios/App/Pods/
+ios/App/build/
+ios/App/DerivedData/
+*.xcuserstate
+*.xcuserdatad
+
+# Web build output (generated from root files)
+www/
 
 # Resource files (icons and splash screens - large files)
 resources/*.png

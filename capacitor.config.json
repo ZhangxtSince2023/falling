@@ -1,8 +1,7 @@
 {
-  "appId": "com.falling.game",
+  "appId": "com.cheung.falling1",
   "appName": "下落小球",
-  "webDir": ".",
-  "bundledWebRuntime": false,
+  "webDir": "www",
   "server": {
     "androidScheme": "https"
   },

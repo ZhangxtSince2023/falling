@@ -6,16 +6,21 @@
 
 ```
 falling/
-├── index.html          # 游戏主页面
-├── game.js             # 游戏逻辑代码
-├── i18n.js             # 多语言支持系统
-├── README.md           # 项目说明文档
-├── RELEASE_GUIDE.md    # 应用发布指南
-├── package.json        # Node.js 依赖配置
+├── index.html             # 游戏主页面
+├── src/                   # 源代码目录
+│   ├── game.js            # 游戏主逻辑
+│   ├── config.js          # 游戏配置和难度系统
+│   ├── effects.js         # 视觉特效系统
+│   └── i18n.js            # 多语言支持系统
+├── assets/                # 游戏资源目录（预留）
+├── package.json           # Node.js 依赖配置
 ├── capacitor.config.json  # Capacitor 移动端配置
-├── resources/          # 应用资源文件夹
-│   └── ASSETS_README.md   # 图标和启动画面指南
-└── .gitignore         # Git 忽略文件配置
+├── www/                   # 构建输出目录（自动生成）
+├── ios/                   # iOS 原生项目
+│   └── App/
+│       ├── App.xcworkspace  # Xcode 工作区（用这个打开）
+│       └── Podfile          # CocoaPods 依赖配置
+└── resources/             # 应用图标和启动画面
 ```
 
 ## 游戏玩法
@@ -40,28 +45,22 @@ falling/
 
 ## 如何运行
 
-### 方法1：本地开发测试
-
-1. 安装一个本地服务器（推荐使用）：
+### 方法1：使用 npm 脚本（推荐）
 
 ```bash
-# 使用 Python 3
-python3 -m http.server 8000
+# 安装依赖
+npm install
 
-# 或使用 Node.js 的 http-server
-npx http-server -p 8000
+# 启动本地开发服务器
+npm run dev
 ```
 
-2. 打开浏览器访问 `http://localhost:8000`
+打开浏览器访问 `http://localhost:8000`
 
 ### 方法2：VS Code Live Server
 
 1. 安装 VS Code 扩展 "Live Server"
 2. 右键点击 `index.html` -> "Open with Live Server"
-
-### 方法3：直接打开（可能有CORS问题）
-
-直接在浏览器中打开 `index.html` 文件
 
 ## 手机测试
 
@@ -73,40 +72,71 @@ npx http-server -p 8000
 
 项目已配置 Capacitor，可以打包成 iOS 和 Android 应用。
 
-### 快速开始
+### iOS 开发设置
+
+#### 前置要求
+- macOS 系统
+- Xcode（从 App Store 下载）
+- Apple Developer 账号（免费或付费）
+- CocoaPods（依赖管理工具）
+
+#### 初次设置步骤
 
 ```bash
 # 1. 安装依赖
 npm install
 
-# 2. 添加平台
-npx cap add ios      # 需要 Mac 和 Xcode
-npx cap add android  # 需要 Android Studio
+# 2. 安装 CocoaPods（如果还没安装）
+brew install cocoapods
 
-# 3. 生成应用图标和启动画面（可选）
-# 先准备 resources/icon.png 和 resources/splash.png
-npm install @capacitor/assets --save-dev
-npx capacitor-assets generate
+# 3. 构建并同步到 iOS
+npm run build:ios
 
-# 4. 同步文件到原生项目
-npx cap sync
+# 4. 进入 iOS App 目录安装依赖
+cd ios/App
+pod install
+cd ../..
 
-# 5. 打开原生项目进行开发和发布
-npx cap open ios
-npx cap open android
+# 5. 打开 Xcode 项目
+npm run cap:open:ios
 ```
 
-### 发布到应用商店
+#### 在 Xcode 中配置签名
 
-详细的发布指南请查看：**[RELEASE_GUIDE.md](./RELEASE_GUIDE.md)**
+1. 在 Xcode 中，点击左侧的蓝色 **App** 项目图标
+2. 选择 **TARGETS** → **App**
+3. 点击 **Signing & Capabilities** 标签
+4. 勾选 **Automatically manage signing**
+5. 在 **Team** 下拉菜单中选择你的 Apple Developer 账号
+6. 确认 **Bundle Identifier** 为 `com.cheung.falling1`
 
-该指南包含：
-- ✅ iOS App Store 发布完整流程
-- ✅ Google Play 发布完整流程
-- ✅ 应用图标和截图准备指南
-- ✅ 签名配置和构建步骤
-- ✅ 常见问题解决方案
-- ✅ 应用商店优化建议
+#### 在真机上运行
+
+1. 用数据线连接 iPhone 到 Mac
+2. 在 Xcode 顶部选择你的 iPhone 设备
+3. 点击 ▶️ 运行按钮
+4. 首次运行需要在 iPhone 上信任开发者：
+   - 设置 → 通用 → VPN 与设备管理 → 信任你的开发者账号
+
+#### 更新代码后同步
+
+```bash
+# 修改了代码后，构建并同步到 iOS
+npm run build:ios
+```
+
+### Android 开发设置
+
+```bash
+# 添加 Android 平台
+npx cap add android
+
+# 同步文件
+npx cap sync android
+
+# 打开 Android Studio
+npx cap open android
+```
 
 ## 技术栈
 
@@ -128,29 +158,64 @@ npx cap open android
 ## 待优化功能
 
 - [ ] 添加音效和振动反馈
-- [ ] 添加粒子效果
-- [ ] 增加难度递增机制（平台变小、间距变大）
+- [x] 添加粒子效果
+- [x] 增加难度递增机制（平台变小、间距变大）
 - [ ] 添加特殊平台（移动平台、弹跳平台）
 - [ ] 添加道具系统
 - [ ] 添加本地最高分记录
-- [ ] 优化触摸控制手感
 - [ ] 添加暂停功能
+
+## 开发工作流
+
+### npm 脚本
+
+```bash
+npm run dev           # 启动本地开发服务器
+npm run build         # 构建到 www/
+npm run build:ios     # 构建并同步到 iOS
+npm run build:android # 构建并同步到 Android
+npm run cap:open:ios  # 打开 Xcode
+```
+
+### 修改代码后同步到 iOS
+
+```bash
+# 构建并同步
+npm run build:ios
+
+# 在 Xcode 中点击 ▶️ 重新运行
+```
+
+### 常见问题
+
+#### iOS 构建失败：No such module 'Capacitor'
+```bash
+cd ios/App && pod install && cd ../..
+npm run build:ios
+```
+
+#### 修改代码后 iOS 没有更新
+```bash
+npm run build:ios
+# 在 Xcode 中：Product → Clean Build Folder (Shift + Cmd + K)
+```
 
 ## 版本控制
 
 使用 Git 进行版本管理：
 
 ```bash
-# 初始化 Git 仓库
-git init
+# 查看当前状态
+git status
 
 # 添加文件
 git add .
 
-# 提交
-git commit -m "Initial commit: 完成基础游戏功能"
+# 提交更改
+git commit -m "描述你的更改"
 
-# 推送到远程仓库（可选）
-git remote add origin <你的仓库地址>
-git push -u origin main
+# 推送到远程仓库
+git push
 ```
+
+**注意**：`.gitignore` 已配置为忽略构建产物和依赖文件，但保留 iOS 项目配置。

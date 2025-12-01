@@ -2,24 +2,25 @@
   "name": "falling",
   "version": "1.0.0",
   "description": "一个简单的手机休闲游戏，玩家控制小球在不断下落的过程中躲避触碰屏幕上边界。",
-  "main": "game.js",
+  "main": "src/game.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "echo 'Build complete - files already in webDir'",
-    "cap:sync": "npx cap sync",
+    "build": "rm -rf www && mkdir -p www/src && cp index.html www/ && cp src/*.js www/src/ && cp -r assets www/",
+    "build:ios": "npm run build && npx cap sync ios",
+    "build:android": "npm run build && npx cap sync android",
+    "cap:sync": "npm run build && npx cap sync",
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
-    "cap:run:ios": "npx cap run ios",
-    "cap:run:android": "npx cap run android"
+    "cap:run:ios": "npm run build:ios && npx cap run ios",
+    "cap:run:android": "npm run build:android && npx cap run android",
+    "dev": "python3 -m http.server 8000"
   },
   "keywords": ["game", "phaser", "mobile", "falling", "casual"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "dependencies": {
-    "playwright": "^1.56.1"
-  },
   "devDependencies": {
+    "playwright": "^1.56.1",
     "@capacitor/cli": "^6.0.0",
     "@capacitor/core": "^6.0.0",
     "@capacitor/ios": "^6.0.0",
