@@ -39,37 +39,64 @@ function flashPlatform(scene, platform) {
     });
 }
 
-// 创建碰撞粒子效果
+// 创建碰撞粒子效果（增强版）
 function createImpactParticles(scene, x, y, colorScheme) {
     if (!colorScheme) {
         console.error('colorScheme 未定义！使用默认颜色');
         colorScheme = { primary: 0xFF6B9D, secondary: 0xFFA06B };
     }
 
-    const particleCount = 25;
+    // 主要向上和两侧飞溅的粒子
+    const particleCount = 12;
 
     for (let i = 0; i < particleCount; i++) {
-        const angle = (Math.PI * 2 * i) / particleCount;
-        const speed = Phaser.Math.Between(200, 400);
+        // 粒子主要向上飞溅（-30度到-150度范围）
+        const angle = -Math.PI / 6 - (Math.PI * 2 / 3) * (i / particleCount);
+        const speed = Phaser.Math.Between(150, 350);
         const vx = Math.cos(angle) * speed;
         const vy = Math.sin(angle) * speed;
 
         const color = i % 2 === 0 ? colorScheme.primary : colorScheme.secondary;
-        const particleSize = Phaser.Math.Between(5, 10);
+        const particleSize = Phaser.Math.Between(4, 8);
         const particle = scene.add.circle(x, y, particleSize, color);
         particle.setAlpha(1);
         particle.setDepth(100);
 
         scene.tweens.add({
             targets: particle,
-            x: x + vx * 0.5,
-            y: y + vy * 0.5,
+            x: x + vx * 0.4,
+            y: y + vy * 0.4,
             alpha: 0,
-            scale: 0.2,
-            duration: 800,
+            scale: 0.1,
+            duration: 500,
             ease: 'Cubic.easeOut',
             onComplete: () => {
                 particle.destroy();
+            }
+        });
+    }
+
+    // 添加小型火花粒子
+    const sparkCount = 8;
+    for (let i = 0; i < sparkCount; i++) {
+        const angle = -Math.PI / 4 - (Math.PI / 2) * Math.random();
+        const speed = Phaser.Math.Between(80, 200);
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+
+        const spark = scene.add.circle(x + Phaser.Math.Between(-10, 10), y, 2, 0xFFFFFF);
+        spark.setAlpha(0.9);
+        spark.setDepth(101);
+
+        scene.tweens.add({
+            targets: spark,
+            x: x + vx * 0.3,
+            y: y + vy * 0.3,
+            alpha: 0,
+            duration: 300,
+            ease: 'Quad.easeOut',
+            onComplete: () => {
+                spark.destroy();
             }
         });
     }
@@ -82,26 +109,96 @@ function shakeCamera(scene) {
     }
 }
 
-// 球体挤压动画
-function squashBallAnimation(scene, ball) {
+// 球体挤压动画（增强版）
+function squashBallAnimation(scene, ball, impactVelocity = 100) {
     if (!ball) return;
 
     scene.tweens.killTweensOf(ball);
 
+    // 根据撞击速度计算挤压程度
+    const velocityFactor = Math.min(impactVelocity / 200, 1);
+    const squashX = 0.5 + (0.25 * velocityFactor); // 0.5 ~ 0.75
+    const squashY = 0.5 - (0.2 * velocityFactor);  // 0.5 ~ 0.3
+
+    // 挤压阶段
     scene.tweens.add({
         targets: ball,
-        scaleX: 0.65,
-        scaleY: 0.35,
-        duration: 80,
+        scaleX: squashX,
+        scaleY: squashY,
+        duration: 60,
         ease: 'Quad.easeOut',
         onComplete: () => {
+            // 反弹拉伸阶段
             scene.tweens.add({
                 targets: ball,
-                scaleX: 0.5,
-                scaleY: 0.5,
-                duration: 120,
-                ease: 'Elastic.easeOut'
+                scaleX: 0.45,
+                scaleY: 0.58,
+                duration: 80,
+                ease: 'Quad.easeOut',
+                onComplete: () => {
+                    // 恢复原状（带弹性）
+                    scene.tweens.add({
+                        targets: ball,
+                        scaleX: 0.5,
+                        scaleY: 0.5,
+                        duration: 150,
+                        ease: 'Elastic.easeOut'
+                    });
+                }
             });
+        }
+    });
+}
+
+// 创建撞击冲击波效果
+function createImpactRing(scene, x, y, colorScheme) {
+    if (!colorScheme) {
+        colorScheme = { primary: 0xFF6B9D, secondary: 0xFFA06B };
+    }
+
+    // 创建多层冲击波
+    for (let i = 0; i < 2; i++) {
+        const ring = scene.add.circle(x, y, 15, colorScheme.primary, 0);
+        ring.setStrokeStyle(4 - i, colorScheme.secondary, 0.8);
+        ring.setDepth(99);
+
+        scene.tweens.add({
+            targets: ring,
+            radius: 60 + i * 20,
+            alpha: 0,
+            lineWidth: 0,
+            duration: 300 + i * 100,
+            delay: i * 50,
+            ease: 'Quad.easeOut',
+            onUpdate: () => {
+                ring.setStrokeStyle(ring.lineWidth, colorScheme.secondary, ring.alpha);
+            },
+            onComplete: () => {
+                ring.destroy();
+            }
+        });
+    }
+}
+
+// 创建小球发光闪烁效果
+function createBallGlow(scene, ball, colorScheme) {
+    if (!ball || !colorScheme) return;
+
+    const glow = scene.add.circle(ball.x, ball.y, ball.displayWidth * 0.8, colorScheme.primary, 0.6);
+    glow.setDepth(ball.depth - 1);
+    glow.setBlendMode(Phaser.BlendModes.ADD);
+
+    scene.tweens.add({
+        targets: glow,
+        scale: 1.8,
+        alpha: 0,
+        duration: 250,
+        ease: 'Quad.easeOut',
+        onUpdate: () => {
+            glow.setPosition(ball.x, ball.y);
+        },
+        onComplete: () => {
+            glow.destroy();
         }
     });
 }

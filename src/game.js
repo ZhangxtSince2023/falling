@@ -183,6 +183,11 @@ function update(time, delta) {
 
     // 更新云朵
     updateClouds(clouds, deltaSeconds, currentDifficulty.riseSpeed, GAME_WIDTH, GAME_HEIGHT);
+
+    // 记录当前帧的垂直速度（用于下一帧碰撞检测）
+    if (player && player.body) {
+        lastVelocityY = player.body.velocity.y;
+    }
 }
 
 // 创建平台
@@ -224,23 +229,44 @@ function generateNewPlatform(scene) {
     createPlatform(scene, newX, newY, currentDifficulty);
 }
 
+// 记录上一帧的垂直速度
+let lastVelocityY = 0;
+
 // 玩家落在平台上
 function onPlayerLandOnPlatform(player, platform) {
-    const isLanding = !wasOnGround && player.body.touching.down && player.body.velocity.y > 50;
+    // 使用上一帧记录的速度作为撞击速度（碰撞时当前速度可能已被引擎重置）
+    const impactVelocity = lastVelocityY;
+    const isLanding = !wasOnGround && player.body.touching.down;
 
     if (isLanding) {
         const contactX = player.x;
         const contactY = player.y + player.displayHeight / 2;
 
+        // 撞击冲击波效果（绑定在小球位置）
+        createImpactRing(currentScene, contactX, contactY, platform.colorScheme);
+
+        // 小球发光效果
+        createBallGlow(currentScene, player, platform.colorScheme);
+
+        // 粒子效果
         createImpactParticles(currentScene, contactX, contactY, platform.colorScheme);
-        shakeCamera(currentScene);
-        squashBallAnimation(currentScene, player);
+
+        // 相机震动（根据撞击速度调整强度）
+        const shakeIntensity = Math.min(impactVelocity / 200, 1) * 0.008;
+        if (currentScene && currentScene.cameras && currentScene.cameras.main) {
+            currentScene.cameras.main.shake(80, shakeIntensity);
+        }
+
+        // 小球挤压动画（传入撞击速度）
+        squashBallAnimation(currentScene, player, impactVelocity);
+
+        // 平台闪烁
         flashPlatform(currentScene, platform);
 
         wasOnGround = true;
     }
 
-    if (player.body.touching.down && Math.abs(player.body.velocity.y) < 10) {
+    if (player.body.touching.down) {
         wasOnGround = true;
     }
 }
@@ -386,6 +412,7 @@ function resetGame() {
     clouds = [];
     currentColorIndex = 0;
     wasOnGround = false;
+    lastVelocityY = 0;
 }
 
 // 切换语言
