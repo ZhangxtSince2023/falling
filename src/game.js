@@ -3,6 +3,36 @@
  * 依赖: config.js, effects.js, i18n.js
  */
 
+// 震动功能封装
+async function vibrate(type) {
+    try {
+        // 检查是否在 Capacitor 原生环境中
+        if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+            const Haptics = window.Capacitor.Plugins.Haptics;
+
+            if (type === 'light') {
+                await Haptics.impact({ style: 'LIGHT' });
+            } else if (type === 'medium') {
+                await Haptics.impact({ style: 'MEDIUM' });
+            } else if (type === 'heavy') {
+                await Haptics.impact({ style: 'HEAVY' });
+            } else if (type === 'error') {
+                await Haptics.notification({ type: 'ERROR' });
+            }
+        } else {
+            // 浏览器回退方案 (Android Chrome 支持，iOS Safari 不支持)
+            if (navigator.vibrate) {
+                if (type === 'light') navigator.vibrate(10);
+                else if (type === 'medium') navigator.vibrate(30);
+                else if (type === 'heavy') navigator.vibrate(50);
+                else if (type === 'error') navigator.vibrate([50, 50, 50]);
+            }
+        }
+    } catch (e) {
+        console.warn('Vibration failed', e);
+    }
+}
+
 // 设置场景函数并创建游戏实例
 gameConfig.scene = {
     preload: preload,
@@ -113,7 +143,10 @@ function create() {
     languageButton.setScrollFactor(0);
     languageButton.setDepth(100);
     languageButton.setInteractive({ useHandCursor: true });
-    languageButton.on('pointerdown', () => cycleLanguage());
+    languageButton.on('pointerdown', () => {
+        vibrate('light');
+        cycleLanguage();
+    });
 
     // 触摸/鼠标控制
     this.input.on('pointerdown', onPointerDown, this);
@@ -257,6 +290,10 @@ function onPlayerLandOnPlatform(player, platform) {
             currentScene.cameras.main.shake(80, shakeIntensity);
         }
 
+        // 手机震动（根据撞击速度决定强度）
+        const vibrateStyle = impactVelocity > 300 ? 'medium' : 'light';
+        vibrate(vibrateStyle);
+
         // 小球挤压动画（传入撞击速度）
         squashBallAnimation(currentScene, player, impactVelocity);
 
@@ -340,7 +377,10 @@ function showStartScreen(scene) {
 
     scene.physics.pause();
 
-    scene.input.once('pointerdown', () => startGame(scene));
+    scene.input.once('pointerdown', () => {
+        vibrate('light');
+        startGame(scene);
+    });
 }
 
 function startGame(scene) {
@@ -354,6 +394,9 @@ function startGame(scene) {
 
 // 游戏失败
 function triggerGameOver(scene) {
+    // 游戏结束震动反馈
+    vibrate('error');
+
     gameOver = true;
     scene.physics.pause();
 
@@ -392,6 +435,7 @@ function triggerGameOver(scene) {
     restartButton.setInteractive();
 
     restartButton.on('pointerdown', () => {
+        vibrate('light');
         scene.physics.resume();
         scene.scene.restart();
         resetGame();
