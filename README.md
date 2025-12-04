@@ -8,10 +8,14 @@
 falling/
 ├── index.html             # 游戏主页面
 ├── src/                   # 源代码目录
-│   ├── game.js            # 游戏主逻辑
-│   ├── config.js          # 游戏配置和难度系统
-│   ├── effects.js         # 视觉特效系统
-│   └── i18n.js            # 多语言支持系统
+│   ├── game-scene.js        # 游戏主场景逻辑（入口）
+│   ├── game-config.js       # 游戏配置和难度系统
+│   ├── visual-effects.js    # 视觉特效系统
+│   ├── localization.js      # 多语言支持系统
+│   ├── haptics.js           # 振动反馈封装
+│   ├── platform-system.js   # 平台生成/回收与计分
+│   ├── player-controller.js # 玩家角色控制与状态
+│   └── input-handler.js     # 输入处理（触摸/键盘）
 ├── assets/                # 游戏资源目录（预留）
 ├── package.json           # Node.js 依赖配置
 ├── capacitor.config.json  # Capacitor 移动端配置
@@ -110,6 +114,25 @@ npm run cap:open:ios
 5. 在 **Team** 下拉菜单中选择你的 Apple Developer 账号
 6. 确认 **Bundle Identifier** 为 `com.cheung.falling1`
 
+#### iOS 项目优化配置
+
+项目已配置以下优化设置（已包含在代码中）：
+
+1. **禁用用户脚本沙箱** - 允许 CocoaPods 脚本正常运行
+   - 位置：`ios/App/Podfile` 和 `App.xcodeproj/project.pbxproj`
+   - 设置：`ENABLE_USER_SCRIPT_SANDBOXING = NO`
+
+2. **抑制废弃 API 警告** - 消除 WKProcessPool 等废弃警告
+   - 位置：`ios/App/Podfile`
+   - 设置：`GCC_WARN_DEPRECATED_DECLARATIONS = NO`
+   - 设置：`CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = NO`
+
+3. **编译器标志** - 禁用废弃声明警告
+   - 位置：`App.xcodeproj/project.pbxproj`
+   - 标志：`-Wno-deprecated-declarations`
+
+这些配置确保了项目在 iOS 真机上能够干净编译，无警告。
+
 #### 在真机上运行
 
 1. 用数据线连接 iPhone 到 Mac
@@ -145,6 +168,21 @@ npx cap open android
 - **Arcade Physics** - 物理引擎
 - **Capacitor** - 移动端打包工具（可选）
 
+## 代码架构
+
+项目采用模块化设计，将游戏功能拆分为独立的模块：
+
+- **game-scene.js** - 游戏主场景，负责初始化和游戏循环
+- **game-config.js** - 游戏配置、颜色方案和难度系统
+- **visual-effects.js** - 粒子效果、动画和视觉特效
+- **localization.js** - 多语言支持和翻译系统
+- **haptics.js** - 振动反馈（支持 Capacitor 和浏览器 API）
+- **platform-system.js** - 平台生成、回收和计分逻辑
+- **player-controller.js** - 玩家角色的状态和控制
+- **input-handler.js** - 触摸和键盘输入处理
+
+这种模块化设计使代码更易于维护和扩展。
+
 ## 核心功能
 
 - ✅ 重力和物理碰撞系统
@@ -154,10 +192,13 @@ npx cap open android
 - ✅ 距离计分系统
 - ✅ 游戏状态管理（开始/结束/重玩）
 - ✅ 多语言支持（中文简体/繁体、英语、日语）
+- ✅ 振动反馈（iOS/Android 原生支持）
+- ✅ 增强视觉特效（粒子、冲击波、球体动画）
 
 ## 待优化功能
 
-- [ ] 添加音效和振动反馈
+- [ ] 添加音效
+- [x] 添加振动反馈
 - [x] 添加粒子效果
 - [x] 增加难度递增机制（平台变小、间距变大）
 - [ ] 添加特殊平台（移动平台、弹跳平台）
@@ -198,6 +239,12 @@ npm run build:ios
 ```bash
 npm run build:ios
 # 在 Xcode 中：Product → Clean Build Folder (Shift + Cmd + K)
+```
+
+#### iOS 构建警告：WKProcessPool 废弃警告
+项目已在 `ios/App/Podfile` 和 `App.xcodeproj/project.pbxproj` 中配置了编译器标志来抑制废弃声明警告。如果更新了 CocoaPods 后警告重新出现，运行：
+```bash
+cd ios/App && pod install && cd ../..
 ```
 
 ## 版本控制

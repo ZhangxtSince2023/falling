@@ -89,7 +89,6 @@ class I18n {
             }
         }
 
-        console.log('Detected language:', this.currentLanguage);
     }
 
     /**
@@ -104,7 +103,6 @@ class I18n {
 
         // 检测浏览器语言
         const browserLang = navigator.language || navigator.userLanguage;
-        console.log('Browser language:', browserLang);
 
         // 处理不同的语言代码格式
         if (browserLang.startsWith('zh')) {
@@ -154,7 +152,6 @@ class I18n {
             this.currentLanguage = lang;
             // 保存到 localStorage
             localStorage.setItem('gameLanguage', lang);
-            console.log('Language changed to:', lang);
             return true;
         }
         console.error('Language not supported:', lang);
