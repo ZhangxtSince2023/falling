@@ -110,8 +110,8 @@ function update(time, delta) {
 
     playerController.markAirborne();
 
-    // 根据当前分数计算难度
-    currentDifficulty = getDifficulty(score);
+    // 根据当前分数和平台数量计算难度 (P1 优化 - 节奏变化)
+    currentDifficulty = getDifficulty(score, platformSystem.totalPlatformsGenerated);
 
     // 平台更新
     platformSystem.update(delta, currentDifficulty);
