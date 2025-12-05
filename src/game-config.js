@@ -13,17 +13,22 @@ const COLOR_SCHEMES = [
 
 // 难度系统配置 - 线性插值与距离驱动 (Gemini + Claude 优化)
 const DIFFICULTY_CONFIG = {
-    MAX_DIFFICULTY_SCORE: 10000, // 延长难度曲线到 10000 分
+    // 难度曲线调整：800分（约60秒左右）达到极限。
+    // 这意味着前 20-25 秒（约 300分）难度会显著爬升，达到劝退效果。
+    MAX_DIFFICULTY_SCORE: 800,
 
     // 难度参数范围 (Easy -> Hard)
-    SPEED: { MIN: 150, MAX: 400 },           // 上升速度 (px/s) - 增长 166%
-    PLATFORM_GAP: { MIN: 150, MAX: 280 },    // 平台垂直间距 (px) - 修正：密集→稀疏
-    PLATFORM_WIDTH: { MIN: 120, MAX: 45 },   // 平台宽度 (px) - 缩减到 37.5%
+    // 1. 速度：起始速度 180，给玩家 5-10秒 适应期。
+    SPEED: { MIN: 180, MAX: 500 },
+    // 2. 间距：起步稍宽松，随后变密。
+    PLATFORM_GAP: { MIN: 160, MAX: 240 },
+    // 3. 宽度：起步宽一点 (120)，容错率高一点。
+    PLATFORM_WIDTH: { MIN: 120, MAX: 45 },
 
-    // 节奏变化配置 (P1 优化 - Gemini 建议)
-    REST_PLATFORM_INTERVAL: 12,              // 每隔 N 个平台出现一个休息平台
-    REST_PLATFORM_WIDTH_MULTIPLIER: 1.8,     // 休息平台宽度倍数
-    REST_PLATFORM_GAP_MULTIPLIER: 0.7,       // 休息平台间距倍数（更近）
+    // 节奏变化配置
+    REST_PLATFORM_INTERVAL: 15,
+    REST_PLATFORM_WIDTH_MULTIPLIER: 1.5,
+    REST_PLATFORM_GAP_MULTIPLIER: 0.8,
 
     // 保留旧的常量以兼容 initTextures
     BASE_PLATFORM_WIDTH_MAX: 150
