@@ -78,14 +78,26 @@ class PlatformSystem {
     createInitialPlatforms() {
         // 使用难度系统的初始参数 (Gemini + Claude 优化)
         const initialDiff = getDifficulty(0);
-        const initialGap = initialDiff.riseSpeed > 0
-            ? (DIFFICULTY_CONFIG.PLATFORM_GAP.MIN / initialDiff.riseSpeed) * initialDiff.riseSpeed
-            : DIFFICULTY_CONFIG.PLATFORM_GAP.MIN;
 
-        for (let i = 0; i < 4; i++) {
-            const platformY = this.gameHeight - 100 - (i * DIFFICULTY_CONFIG.PLATFORM_GAP.MIN);
+        // 小球初始位置在 gameHeight / 2 + 100，在其下方 50px 处创建起始平台
+        const playerStartY = this.gameHeight / 2 + 100;
+        const startPlatformY = playerStartY + 50;
+
+        // 创建起始平台（在小球正下方，宽度稍大便于落地）
+        const startPlatformWidth = Math.min(DIFFICULTY_CONFIG.PLATFORM_WIDTH.MIN * 1.2, this.gameWidth - this.spawnHorizontalPadding * 2);
+        this.createPlatform(this.gameWidth / 2, startPlatformY, initialDiff, startPlatformWidth);
+
+        // 从起始平台向下创建更多平台，填充到屏幕底部
+        const gap = DIFFICULTY_CONFIG.PLATFORM_GAP.MIN;
+        for (let y = startPlatformY + gap; y < this.gameHeight + gap; y += gap) {
             const { x, width } = this.spawnStrategy.getNextPlatform(initialDiff);
-            this.createPlatform(x, platformY, initialDiff, width);
+            this.createPlatform(x, y, initialDiff, width);
+        }
+
+        // 从起始平台向上创建平台，填充到屏幕顶部以上
+        for (let y = startPlatformY - gap; y > -gap; y -= gap) {
+            const { x, width } = this.spawnStrategy.getNextPlatform(initialDiff);
+            this.createPlatform(x, y, initialDiff, width);
         }
     }
 

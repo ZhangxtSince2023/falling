@@ -30,7 +30,14 @@ let GAME_HEIGHT;
 let GAME_WIDTH;
 
 function preload() {
-    createBallTexture(this, 'ball', 0xFF6B9D, 0xFFA06B);
+    // 加载 AI 生成的图片资源
+    this.load.svg('ball', 'assets/images/ball.svg', { width: 64, height: 64 });
+    
+    // 如果你有 AI 生成的音乐，放在 assets/audio/bgm.mp3
+    // this.load.audio('bgm', 'assets/audio/bgm.mp3');
+    
+    // 原有的程序化纹理生成（如果文件加载失败可以作为后备，或者直接注释掉）
+    // createBallTexture(this, 'ball', 0xFF6B9D, 0xFFA06B);
 }
 
 function create() {
