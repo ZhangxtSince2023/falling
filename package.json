@@ -2,12 +2,13 @@
   "name": "falling",
   "version": "0.0.1",
   "description": "一个简单的手机休闲游戏，玩家控制小球在不断下落的过程中躲避触碰屏幕上边界。",
-  "main": "src/game-scene.js",
+  "main": "src/game-scene.ts",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
@@ -36,9 +37,12 @@
     "@capacitor/splash-screen": "^7.0.3",
     "@capacitor/status-bar": "^7.0.3",
     "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.2",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
+    "phaser": "^3.90.0",
     "playwright": "^1.56.1",
+    "typescript": "^5.9.3",
     "vite": "^7.2.7"
   },
   "dependencies": {

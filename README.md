@@ -7,17 +7,19 @@
 ```
 falling/
 ├── index.html                   # 游戏主页面
-├── vite.config.js               # Vite 构建配置
-├── src/                         # 源代码目录 (ES Modules)
-│   ├── game-scene.js              # 游戏主场景逻辑（入口）
-│   ├── game-config.js             # 游戏配置和难度系统
-│   ├── visual-effects.js          # 视觉特效系统
-│   ├── localization.js            # 多语言支持系统
-│   ├── haptics.js                 # 振动反馈封装
-│   ├── platform-system.js         # 平台生成/回收与计分
-│   ├── platform-spawn-strategy.js # 智能平台生成策略（防贴墙、左右交替）
-│   ├── player-controller.js       # 玩家角色控制与状态
-│   └── input-handler.js           # 输入处理（触摸/键盘）
+├── vite.config.ts               # Vite 构建配置 (TypeScript)
+├── tsconfig.json                # TypeScript 配置
+├── src/                         # 源代码目录 (TypeScript)
+│   ├── types.ts                   # 类型定义
+│   ├── game-scene.ts              # 游戏主场景逻辑（入口）
+│   ├── game-config.ts             # 游戏配置和难度系统
+│   ├── visual-effects.ts          # 视觉特效系统
+│   ├── localization.ts            # 多语言支持系统
+│   ├── haptics.ts                 # 振动反馈封装
+│   ├── platform-system.ts         # 平台生成/回收与计分
+│   ├── platform-spawn-strategy.ts # 智能平台生成策略（防贴墙、左右交替）
+│   ├── player-controller.ts       # 玩家角色控制与状态
+│   └── input-handler.ts           # 输入处理（触摸/键盘）
 ├── assets/                      # 游戏资源目录（预留）
 ├── CLAUDE.md                    # AI 协作开发流程文档
 ├── package.json                 # Node.js 依赖配置
@@ -49,7 +51,7 @@ falling/
 - ❌ 问题：速度提升后，平台间距变化不一致
 
 改进方案：基于平台间距计算生成时间
-```javascript
+```typescript
 spawnInterval = (platformGap / riseSpeed) * 1000
 ```
 - ✅ 效果：无论速度如何变化，平台间距始终保持设计值
@@ -230,8 +232,9 @@ npx cap open android
 
 ## 技术栈
 
+- **TypeScript** - 类型安全的 JavaScript 超集
 - **Vite** - 构建工具（开发服务器 + 生产打包）
-- **Phaser 3** - 游戏框架
+- **Phaser 3** - 游戏框架（带完整类型定义）
 - **HTML5 Canvas** - 渲染引擎
 - **Arcade Physics** - 物理引擎
 - **Capacitor** - 移动端打包工具（可选）
@@ -239,19 +242,20 @@ npx cap open android
 
 ## 代码架构
 
-项目采用模块化设计，将游戏功能拆分为独立的模块：
+项目采用 TypeScript 模块化设计，将游戏功能拆分为独立的模块：
 
-- **game-scene.js** - 游戏主场景，负责初始化和游戏循环
-- **game-config.js** - 游戏配置、颜色方案和智能难度系统
-- **visual-effects.js** - 粒子效果、动画和视觉特效
-- **localization.js** - 多语言支持和翻译系统
-- **haptics.js** - 振动反馈（支持 Capacitor 和浏览器 API）
-- **platform-system.js** - 平台生成、回收和计分逻辑
-- **platform-spawn-strategy.js** - 智能平台生成策略（防贴墙、左右交替、避免连续窄平台）
-- **player-controller.js** - 玩家角色的状态和控制
-- **input-handler.js** - 触摸和键盘输入处理
+- **types.ts** - 集中定义所有类型接口（ColorScheme, Difficulty, GamePlatform 等）
+- **game-scene.ts** - 游戏主场景，负责初始化和游戏循环
+- **game-config.ts** - 游戏配置、颜色方案和智能难度系统
+- **visual-effects.ts** - 粒子效果、动画和视觉特效
+- **localization.ts** - 多语言支持和翻译系统
+- **haptics.ts** - 振动反馈（支持 Capacitor 和浏览器 API）
+- **platform-system.ts** - 平台生成、回收和计分逻辑
+- **platform-spawn-strategy.ts** - 智能平台生成策略（防贴墙、左右交替、避免连续窄平台）
+- **player-controller.ts** - 玩家角色的状态和控制
+- **input-handler.ts** - 触摸和键盘输入处理
 
-这种模块化设计使代码更易于维护和扩展。
+这种模块化设计使代码更易于维护和扩展，TypeScript 提供了完整的类型检查和 IDE 支持。
 
 ## 核心功能
 
@@ -317,7 +321,8 @@ npx cap open android
 
 ```bash
 npm run dev           # 启动 Vite 开发服务器（HMR 热更新）
-npm run build         # 使用 Vite 构建到 dist/
+npm run build         # TypeScript 类型检查 + Vite 构建到 dist/
+npm run typecheck     # 仅运行 TypeScript 类型检查
 npm run preview       # 预览生产构建
 npm run build:ios     # 构建并同步到 iOS
 npm run build:android # 构建并同步到 Android
@@ -351,6 +356,12 @@ npm run build:ios
 项目已在 `ios/App/Podfile` 和 `App.xcodeproj/project.pbxproj` 中配置了编译器标志来抑制废弃声明警告。如果更新了 CocoaPods 后警告重新出现，运行：
 ```bash
 cd ios/App && pod install && cd ../..
+```
+
+#### TypeScript 类型错误
+```bash
+# 单独运行类型检查查看详细错误
+npm run typecheck
 ```
 
 ## 版本控制
