@@ -188,9 +188,5 @@ class I18n {
 }
 
 // 创建全局 i18n 实例
-const i18n = new I18n();
-
-// 导出（用于 ES6 模块）
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { i18n, I18n };
-}
+export const i18n = new I18n();
+export { I18n };

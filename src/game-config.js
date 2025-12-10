@@ -3,7 +3,7 @@
  */
 
 // Helix Jump 风格的颜色配置
-const COLOR_SCHEMES = [
+export const COLOR_SCHEMES = [
     { primary: 0xFF6B9D, secondary: 0xFFA06B }, // 粉色到橙色
     { primary: 0x6B9DFF, secondary: 0x9D6BFF }, // 蓝色到紫色
     { primary: 0xFFD700, secondary: 0xFF69B4 }, // 金色到粉色
@@ -12,7 +12,7 @@ const COLOR_SCHEMES = [
 ];
 
 // 难度系统配置 - 线性插值与距离驱动 (Gemini + Claude 优化)
-const DIFFICULTY_CONFIG = {
+export const DIFFICULTY_CONFIG = {
     // 难度曲线调整：800分（约60秒左右）达到极限。
     // 这意味着前 20-25 秒（约 300分）难度会显著爬升，达到劝退效果。
     MAX_DIFFICULTY_SCORE: 800,
@@ -35,10 +35,10 @@ const DIFFICULTY_CONFIG = {
 };
 
 // 线性插值函数
-const lerp = (start, end, t) => start + (end - start) * t;
+export const lerp = (start, end, t) => start + (end - start) * t;
 
 // 计算当前难度参数 - 统一难度曲线到 10000 分
-function getDifficulty(currentScore, platformCount = 0) {
+export function getDifficulty(currentScore, platformCount = 0) {
     // 计算难度进度 (0.0 到 1.0)
     const progress = Math.min(Math.max(currentScore / DIFFICULTY_CONFIG.MAX_DIFFICULTY_SCORE, 0), 1);
 
@@ -71,8 +71,8 @@ function getDifficulty(currentScore, platformCount = 0) {
     };
 }
 
-// 游戏配置
-const gameConfig = {
+// 游戏配置（不含 scene，由 game-scene.js 设置）
+export const gameConfig = {
     type: Phaser.AUTO,
     width: 375,
     height: 667,

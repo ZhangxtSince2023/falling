@@ -2,7 +2,7 @@
  * 振动反馈封装
  * 优先调用 Capacitor Haptics，回退到浏览器 vibrate
  */
-async function vibrate(type) {
+export async function vibrate(type) {
     try {
         if (window.Capacitor && window.Capacitor.isNativePlatform()) {
             const Haptics = window.Capacitor.Plugins.Haptics;
@@ -27,4 +27,3 @@ async function vibrate(type) {
         console.warn('Vibration failed', e);
     }
 }
-

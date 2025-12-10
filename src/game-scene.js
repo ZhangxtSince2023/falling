@@ -3,14 +3,21 @@
  * 依赖: game-config.js, visual-effects.js, localization.js, haptics.js, platform-system.js, player-controller.js, input-handler.js
  */
 
-// 设置场景函数并创建游戏实例
-gameConfig.scene = {
-    preload: preload,
-    create: create,
-    update: update
-};
-
-const game = new Phaser.Game(gameConfig);
+import { i18n } from './localization.js';
+import { gameConfig, getDifficulty } from './game-config.js';
+import {
+    createClouds,
+    updateClouds,
+    createImpactRing,
+    createBallGlow,
+    createImpactParticles,
+    squashBallAnimation,
+    flashPlatform
+} from './visual-effects.js';
+import { vibrate } from './haptics.js';
+import { PlatformSystem } from './platform-system.js';
+import { PlayerController } from './player-controller.js';
+import { InputHandler } from './input-handler.js';
 
 // 游戏状态
 let playerController;
@@ -32,10 +39,10 @@ let GAME_WIDTH;
 function preload() {
     // 加载 AI 生成的图片资源
     this.load.svg('ball', 'assets/images/ball.svg', { width: 64, height: 64 });
-    
+
     // 如果你有 AI 生成的音乐，放在 assets/audio/bgm.mp3
     // this.load.audio('bgm', 'assets/audio/bgm.mp3');
-    
+
     // 原有的程序化纹理生成（如果文件加载失败可以作为后备，或者直接注释掉）
     // createBallTexture(this, 'ball', 0xFF6B9D, 0xFFA06B);
 }
@@ -313,3 +320,12 @@ function cycleLanguage() {
         resetGame();
     }
 }
+
+// 设置场景函数并创建游戏实例
+gameConfig.scene = {
+    preload: preload,
+    create: create,
+    update: update
+};
+
+const game = new Phaser.Game(gameConfig);

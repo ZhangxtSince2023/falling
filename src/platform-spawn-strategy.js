@@ -2,7 +2,7 @@
  * 平台生成策略 (Gemini 设计 + Claude 优化)
  * 负责计算下一个平台的 X 坐标和宽度，保证可玩性和节奏感。
  */
-class PlatformSpawnStrategy {
+export class PlatformSpawnStrategy {
     constructor(gameWidth, spawnPadding) {
         this.gameWidth = gameWidth;
         this.spawnPadding = spawnPadding;

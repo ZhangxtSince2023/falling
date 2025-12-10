@@ -1,7 +1,7 @@
 /**
  * 指针拖动输入控制
  */
-class InputHandler {
+export class InputHandler {
     constructor(scene, player, gameWidth) {
         this.scene = scene;
         this.player = player;

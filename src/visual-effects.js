@@ -3,7 +3,7 @@
  */
 
 // 创建程序化的球体纹理（带渐变效果）
-function createBallTexture(scene, key, color1, color2) {
+export function createBallTexture(scene, key, color1, color2) {
     const graphics = scene.make.graphics({ x: 0, y: 0, add: false });
     const radius = 32;
 
@@ -27,7 +27,7 @@ function createBallTexture(scene, key, color1, color2) {
 }
 
 // 平台碰撞闪烁效果
-function flashPlatform(scene, platform) {
+export function flashPlatform(scene, platform) {
     if (!platform || !scene) return;
 
     scene.tweens.add({
@@ -40,7 +40,7 @@ function flashPlatform(scene, platform) {
 }
 
 // 创建碰撞粒子效果（增强版）
-function createImpactParticles(scene, x, y, colorScheme) {
+export function createImpactParticles(scene, x, y, colorScheme) {
     if (!colorScheme) {
         console.error('colorScheme 未定义！使用默认颜色');
         colorScheme = { primary: 0xFF6B9D, secondary: 0xFFA06B };
@@ -103,14 +103,14 @@ function createImpactParticles(scene, x, y, colorScheme) {
 }
 
 // 屏幕震动效果
-function shakeCamera(scene) {
+export function shakeCamera(scene) {
     if (scene && scene.cameras && scene.cameras.main) {
         scene.cameras.main.shake(100, 0.005);
     }
 }
 
 // 球体挤压动画（增强版）
-function squashBallAnimation(scene, ball, impactVelocity = 100) {
+export function squashBallAnimation(scene, ball, impactVelocity = 100) {
     if (!ball) return;
 
     scene.tweens.killTweensOf(ball);
@@ -151,7 +151,7 @@ function squashBallAnimation(scene, ball, impactVelocity = 100) {
 }
 
 // 创建撞击冲击波效果
-function createImpactRing(scene, x, y, colorScheme) {
+export function createImpactRing(scene, x, y, colorScheme) {
     if (!colorScheme) {
         colorScheme = { primary: 0xFF6B9D, secondary: 0xFFA06B };
     }
@@ -181,7 +181,7 @@ function createImpactRing(scene, x, y, colorScheme) {
 }
 
 // 创建小球发光闪烁效果
-function createBallGlow(scene, ball, colorScheme) {
+export function createBallGlow(scene, ball, colorScheme) {
     if (!ball || !colorScheme) return;
 
     const glow = scene.add.circle(ball.x, ball.y, ball.displayWidth * 0.8, colorScheme.primary, 0.6);
@@ -204,7 +204,7 @@ function createBallGlow(scene, ball, colorScheme) {
 }
 
 // 创建云朵装饰
-function createClouds(scene, GAME_WIDTH, GAME_HEIGHT) {
+export function createClouds(scene, GAME_WIDTH, GAME_HEIGHT) {
     const clouds = [];
     for (let i = 0; i < 4; i++) {
         const cloud = scene.add.ellipse(
@@ -222,7 +222,7 @@ function createClouds(scene, GAME_WIDTH, GAME_HEIGHT) {
 }
 
 // 更新云朵位置
-function updateClouds(clouds, deltaSeconds, riseSpeed, GAME_WIDTH, GAME_HEIGHT) {
+export function updateClouds(clouds, deltaSeconds, riseSpeed, GAME_WIDTH, GAME_HEIGHT) {
     clouds.forEach(cloud => {
         cloud.y -= riseSpeed * 0.5 * deltaSeconds;
 

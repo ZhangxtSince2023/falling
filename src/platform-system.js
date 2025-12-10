@@ -1,7 +1,10 @@
 /**
  * 平台生成与回收管理
  */
-class PlatformSystem {
+import { COLOR_SCHEMES, DIFFICULTY_CONFIG, getDifficulty } from './game-config.js';
+import { PlatformSpawnStrategy } from './platform-spawn-strategy.js';
+
+export class PlatformSystem {
     constructor(scene, gameWidth, gameHeight) {
         this.scene = scene;
         this.gameWidth = gameWidth;

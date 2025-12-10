@@ -1,7 +1,7 @@
 /**
  * 玩家相关封装
  */
-class PlayerController {
+export class PlayerController {
     constructor(scene, gameWidth, gameHeight) {
         this.scene = scene;
         this.gameWidth = gameWidth;
@@ -44,4 +44,3 @@ class PlayerController {
         this.lastVelocityY = 0;
     }
 }
-
