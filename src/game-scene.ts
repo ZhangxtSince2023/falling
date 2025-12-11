@@ -18,6 +18,13 @@ import { vibrate } from './haptics.ts';
 import { PlatformSystem } from './platform-system.ts';
 import { PlayerController } from './player-controller.ts';
 import { InputHandler } from './input-handler.ts';
+import {
+  createScoreDisplay,
+  createStartScreen,
+  createGameOverPanel,
+  type StartScreenElements,
+  type GameOverPanelElements,
+} from './ui-components.ts';
 import type { Difficulty, GamePlatform } from './types.ts';
 
 // 游戏状态
@@ -30,13 +37,11 @@ let clouds: Phaser.GameObjects.Ellipse[] = [];
 let score = 0;
 let lastDisplayedScore = -1; // 用于脏检查，避免每帧重绘
 let scoreText: Phaser.GameObjects.Text;
-let gameOverText: Phaser.GameObjects.Text;
-let restartButton: Phaser.GameObjects.Text;
-let languageButton: Phaser.GameObjects.Text;
 let currentScene: Phaser.Scene;
 let currentDifficulty: Difficulty;
 let GAME_HEIGHT: number;
 let GAME_WIDTH: number;
+let gameOverElements: GameOverPanelElements | null = null;
 
 function preload(this: Phaser.Scene): void {
   // 加载 AI 生成的图片资源
@@ -104,40 +109,8 @@ function create(this: Phaser.Scene): void {
     this
   );
 
-  // 创建UI
-  scoreText = this.add.text(16, 16, i18n.t('score') + ': 0', {
-    fontSize: '24px',
-    color: '#fff',
-    fontStyle: 'bold',
-    stroke: '#000',
-    strokeThickness: 4,
-  });
-  scoreText.setScrollFactor(0);
-  scoreText.setDepth(100);
-
-  // 语言切换按钮
-  languageButton = this.add.text(
-    GAME_WIDTH - 16,
-    16,
-    '🌐 ' + i18n.getCurrentLanguageName(),
-    {
-      fontSize: '20px',
-      color: '#fff',
-      fontStyle: 'bold',
-      stroke: '#000',
-      strokeThickness: 3,
-      backgroundColor: '#00000066',
-      padding: { x: 10, y: 5 },
-    }
-  );
-  languageButton.setOrigin(1, 0);
-  languageButton.setScrollFactor(0);
-  languageButton.setDepth(100);
-  languageButton.setInteractive({ useHandCursor: true });
-  languageButton.on('pointerdown', () => {
-    vibrate('light');
-    cycleLanguage();
-  });
+  // 创建分数显示 - 大号数字，居中顶部
+  scoreText = createScoreDisplay(this, GAME_WIDTH / 2, 60, 0);
 
   // 输入控制
   inputHandler = new InputHandler(this, playerController.sprite, GAME_WIDTH);
@@ -175,7 +148,7 @@ function update(this: Phaser.Scene, _time: number, delta: number): void {
   score = platformSystem.getScore();
   // 脏检查：只在分数变化时才更新文本，避免每帧重绘
   if (score !== lastDisplayedScore) {
-    scoreText.setText(i18n.t('score') + ': ' + score);
+    scoreText.setText(String(score));
     lastDisplayedScore = score;
   }
 
@@ -251,48 +224,19 @@ function onPlayerLandOnPlatform(
 }
 
 // 开始界面
-let startScreenElements: Phaser.GameObjects.GameObject[] = [];
+let startScreenElements: StartScreenElements | null = null;
 
 function showStartScreen(scene: Phaser.Scene): void {
-  const titleText = scene.add.text(
+  // 使用新的 UI 组件创建开始界面
+  startScreenElements = createStartScreen(
+    scene,
     GAME_WIDTH / 2,
-    GAME_HEIGHT / 2 - 80,
-    i18n.t('gameTitle') || '坠落小球',
+    GAME_HEIGHT / 2,
     {
-      fontSize: '42px',
-      color: '#fff',
-      fontStyle: 'bold',
-      stroke: '#000',
-      strokeThickness: 6,
+      title: i18n.t('gameTitle') || '坠落小球',
+      hint: i18n.t('tapToStart') || '点击屏幕开始游戏',
     }
   );
-  titleText.setOrigin(0.5);
-  titleText.setDepth(100);
-  startScreenElements.push(titleText);
-
-  const startText = scene.add.text(
-    GAME_WIDTH / 2,
-    GAME_HEIGHT / 2 + 20,
-    i18n.t('tapToStart') || '点击屏幕开始游戏',
-    {
-      fontSize: '28px',
-      color: '#00ff00',
-      fontStyle: 'bold',
-      stroke: '#000',
-      strokeThickness: 4,
-    }
-  );
-  startText.setOrigin(0.5);
-  startText.setDepth(100);
-  startScreenElements.push(startText);
-
-  scene.tweens.add({
-    targets: startText,
-    alpha: 0.3,
-    duration: 800,
-    yoyo: true,
-    repeat: -1,
-  });
 
   scene.physics.pause();
 
@@ -303,10 +247,12 @@ function showStartScreen(scene: Phaser.Scene): void {
 }
 
 function startGame(scene: Phaser.Scene): void {
-  startScreenElements.forEach((element) => {
-    if (element?.destroy) element.destroy();
-  });
-  startScreenElements = [];
+  if (startScreenElements) {
+    startScreenElements.allElements.forEach((element) => {
+      if (element?.destroy) element.destroy();
+    });
+    startScreenElements = null;
+  }
   scene.physics.resume();
   gameStarted = true;
 }
@@ -319,69 +265,34 @@ function triggerGameOver(scene: Phaser.Scene): void {
   gameOver = true;
   scene.physics.pause();
 
-  gameOverText = scene.add.text(
-    GAME_WIDTH / 2,
-    GAME_HEIGHT / 2 - 100,
-    i18n.t('gameOver'),
-    {
-      fontSize: '48px',
-      color: '#ff0000',
-      fontStyle: 'bold',
-      stroke: '#000',
-      strokeThickness: 6,
-    }
-  );
-  gameOverText.setOrigin(0.5);
-  gameOverText.setScrollFactor(0);
-  gameOverText.setDepth(100);
-
-  const finalScoreText = scene.add.text(
+  // 使用新的 UI 组件创建游戏结束面板
+  gameOverElements = createGameOverPanel(
+    scene,
     GAME_WIDTH / 2,
     GAME_HEIGHT / 2,
-    i18n.t('finalScore') + ': ' + score,
+    score,
     {
-      fontSize: '32px',
-      color: '#fff',
-      fontStyle: 'bold',
-      stroke: '#000',
-      strokeThickness: 4,
+      gameOver: i18n.t('gameOver'),
+      finalScore: i18n.t('finalScore'),
+      restart: i18n.t('tapToRestart'),
+    },
+    () => {
+      vibrate('light');
+      scene.physics.resume();
+      scene.scene.restart();
+      resetGame();
     }
   );
-  finalScoreText.setOrigin(0.5);
-  finalScoreText.setScrollFactor(0);
-  finalScoreText.setDepth(100);
-
-  restartButton = scene.add.text(
-    GAME_WIDTH / 2,
-    GAME_HEIGHT / 2 + 80,
-    i18n.t('tapToRestart'),
-    {
-      fontSize: '28px',
-      color: '#00ff00',
-      fontStyle: 'bold',
-      stroke: '#000',
-      strokeThickness: 4,
-    }
-  );
-  restartButton.setOrigin(0.5);
-  restartButton.setScrollFactor(0);
-  restartButton.setDepth(100);
-  restartButton.setInteractive();
-
-  restartButton.on('pointerdown', () => {
-    vibrate('light');
-    scene.physics.resume();
-    scene.scene.restart();
-    resetGame();
-  });
 }
 
 // 清理开始界面元素（防止内存泄漏）
 function cleanupStartScreen(): void {
-  startScreenElements.forEach((element) => {
-    if (element?.destroy) element.destroy();
-  });
-  startScreenElements = [];
+  if (startScreenElements) {
+    startScreenElements.allElements.forEach((element) => {
+      if (element?.destroy) element.destroy();
+    });
+    startScreenElements = null;
+  }
 }
 
 // 重置游戏
@@ -393,26 +304,18 @@ function resetGame(): void {
   clouds = [];
   // 清理开始界面元素（修复换语言时的内存泄漏）
   cleanupStartScreen();
+  // 清理游戏结束元素
+  if (gameOverElements) {
+    gameOverElements.allElements.forEach((element) => {
+      if (element?.destroy) element.destroy();
+    });
+    gameOverElements = null;
+  }
   inputHandler?.reset();
   platformSystem?.reset();
   playerController?.resetFlags();
 }
 
-// 切换语言
-function cycleLanguage(): void {
-  const languages = ['zh', 'zh-TW', 'en', 'ja'];
-  const currentLang = i18n.getCurrentLanguage();
-  const currentIndex = languages.indexOf(currentLang);
-  const nextIndex = (currentIndex + 1) % languages.length;
-  const nextLang = languages[nextIndex];
-
-  i18n.setLanguage(nextLang);
-
-  if (currentScene) {
-    currentScene.scene.restart();
-    resetGame();
-  }
-}
 
 // 设置场景函数并创建游戏实例（惰性单例，避免 HMR/重复导入多实例）
 gameConfig.scene = {
