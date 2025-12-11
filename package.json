@@ -1,7 +1,7 @@
 {
-  "name": "falling",
+  "name": "descend",
   "version": "0.0.1",
-  "description": "一个简单的手机休闲游戏，玩家控制小球在不断下落的过程中躲避触碰屏幕上边界。",
+  "description": "A casual mobile game where players control a ball descending through platforms, avoiding the top edge of the screen.",
   "main": "src/game-scene.ts",
   "type": "module",
   "scripts": {

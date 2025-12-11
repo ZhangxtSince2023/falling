@@ -12,7 +12,7 @@ import type {
 const translations: Translations = {
   // 中文（简体）
   zh: {
-    gameTitle: '坠落小球',
+    gameTitle: 'Descend',
     distance: '距离',
     score: '分数',
     difficulty: '难度',
@@ -28,7 +28,7 @@ const translations: Translations = {
 
   // 中文（繁体）
   'zh-TW': {
-    gameTitle: '墜落小球',
+    gameTitle: 'Descend',
     distance: '距離',
     score: '分數',
     difficulty: '難度',
@@ -44,7 +44,7 @@ const translations: Translations = {
 
   // 英语
   en: {
-    gameTitle: 'Falling Ball',
+    gameTitle: 'Descend',
     distance: 'Distance',
     score: 'Score',
     difficulty: 'Difficulty',
@@ -60,7 +60,7 @@ const translations: Translations = {
 
   // 日语
   ja: {
-    gameTitle: '落下ボール',
+    gameTitle: 'Descend',
     distance: '距離',
     score: 'スコア',
     difficulty: '難易度',

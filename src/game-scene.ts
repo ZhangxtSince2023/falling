@@ -233,7 +233,7 @@ function showStartScreen(scene: Phaser.Scene): void {
     GAME_WIDTH / 2,
     GAME_HEIGHT / 2,
     {
-      title: i18n.t('gameTitle') || '坠落小球',
+      title: i18n.t('gameTitle') || 'Descend',
       hint: i18n.t('tapToStart') || '点击屏幕开始游戏',
     }
   );

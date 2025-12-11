@@ -1,11 +1,11 @@
-# 下落小球手游
+# Descend
 
-一个简单的手机休闲游戏，玩家控制小球在不断下落的过程中躲避触碰屏幕上边界。
+A casual mobile game where players control a ball descending through platforms, avoiding the top edge of the screen.
 
 ## 项目结构
 
 ```
-falling/
+descend/
 ├── index.html                   # 游戏主页面
 ├── vite.config.ts               # Vite 构建配置 (TypeScript)
 ├── tsconfig.json                # TypeScript 配置
