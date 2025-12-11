@@ -4,13 +4,13 @@
 import Phaser from 'phaser';
 import type { ColorScheme, DifficultyConfig, Difficulty } from './types.ts';
 
-// Helix Jump 风格的颜色配置
+// 霓虹风格颜色配置
 export const COLOR_SCHEMES: ColorScheme[] = [
-  { primary: 0xff6b9d, secondary: 0xffa06b }, // 粉色到橙色
-  { primary: 0x6b9dff, secondary: 0x9d6bff }, // 蓝色到紫色
-  { primary: 0xffd700, secondary: 0xff69b4 }, // 金色到粉色
-  { primary: 0x00ced1, secondary: 0x9370db }, // 青色到紫色
-  { primary: 0xff4500, secondary: 0xffd700 }, // 橙红到金色
+  { primary: 0x00ffff, secondary: 0x0088ff }, // 青色霓虹
+  { primary: 0xff00ff, secondary: 0x8800ff }, // 品红霓虹
+  { primary: 0x00ff88, secondary: 0x00ffcc }, // 绿色霓虹
+  { primary: 0xffff00, secondary: 0xff8800 }, // 黄色霓虹
+  { primary: 0xff0088, secondary: 0xff00ff }, // 粉红霓虹
 ];
 
 // 难度系统配置 - 线性插值与距离驱动 (Gemini + Claude 优化)
@@ -104,7 +104,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   width: 375,
   height: 667,
   parent: 'game-container',
-  backgroundColor: '#FF6B9D',
+  backgroundColor: '#0a0a1a', // 深色背景
   physics: {
     default: 'arcade',
     arcade: {

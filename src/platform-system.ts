@@ -87,32 +87,32 @@ export class PlatformSystem {
       const key = `platform_texture_${index}`;
       if (!this.scene.textures.exists(key)) {
         const graphics = this.scene.add.graphics();
-        graphics.fillGradientStyle(
-          scheme.primary,
-          scheme.secondary,
-          scheme.primary,
-          scheme.secondary,
-          1,
-          1,
-          1,
-          1
-        );
-        graphics.fillRoundedRect(
-          0,
-          0,
-          this.baseTextureWidth,
-          this.platformHeight,
-          10
-        );
-        graphics.lineStyle(3, 0xffffff, 0.8);
-        graphics.strokeRoundedRect(
-          0,
-          0,
-          this.baseTextureWidth,
-          this.platformHeight,
-          10
-        );
-        graphics.generateTexture(key, this.baseTextureWidth, this.platformHeight);
+        const w = this.baseTextureWidth;
+        const h = this.platformHeight;
+        const radius = h / 2;
+
+        // 霓虹发光效果：多层叠加
+        // 外发光层 (模糊光晕)
+        graphics.fillStyle(scheme.primary, 0.15);
+        graphics.fillRoundedRect(-4, -4, w + 8, h + 8, radius + 2);
+
+        // 中发光层
+        graphics.fillStyle(scheme.primary, 0.3);
+        graphics.fillRoundedRect(-2, -2, w + 4, h + 4, radius + 1);
+
+        // 核心填充 (暗色透明，让边框更突出)
+        graphics.fillStyle(0x000000, 0.4);
+        graphics.fillRoundedRect(0, 0, w, h, radius);
+
+        // 主霓虹边框
+        graphics.lineStyle(3, scheme.primary, 1);
+        graphics.strokeRoundedRect(0, 0, w, h, radius);
+
+        // 内部高光线条
+        graphics.lineStyle(1, 0xffffff, 0.6);
+        graphics.strokeRoundedRect(2, 2, w - 4, h - 4, radius - 1);
+
+        graphics.generateTexture(key, w + 8, h + 8);
         graphics.destroy();
       }
       this.platformTextures.push({ key, scheme });

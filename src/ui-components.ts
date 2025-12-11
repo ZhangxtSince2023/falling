@@ -4,25 +4,26 @@
  */
 import Phaser from 'phaser';
 
-// UI 配置常量
+// UI 配置常量 - 霓虹风格
 export const UI_CONFIG = {
   // 字体配置
-  // 中文使用快乐体，日语使用小杉丸，英文/数字使用 Nunito
   fonts: {
     primary: '"ZCOOL KuaiLe", "Kosugi Maru", "Nunito", sans-serif',
     number: '"Nunito", "ZCOOL KuaiLe", "Kosugi Maru", sans-serif',
   },
-  // 颜色配置
+  // 霓虹颜色配置
   colors: {
-    panelBg: 0x000000,
-    panelBgAlpha: 0.6,
-    buttonBg: 0xffffff,
-    buttonBgAlpha: 0.2,
-    buttonBorder: 0xffffff,
-    textPrimary: '#ffffff',
-    textAccent: '#ffeb3b',
-    textSuccess: '#4caf50',
-    textDanger: '#ff5252',
+    panelBg: 0x0a0a2e,
+    panelBgAlpha: 0.85,
+    buttonBg: 0x000000,
+    buttonBgAlpha: 0.5,
+    buttonBorder: 0x00ffff,
+    textPrimary: '#00ffff', // 霓虹青色
+    textAccent: '#ff00ff',  // 霓虹品红
+    textSuccess: '#00ff88', // 霓虹绿色
+    textDanger: '#ff0088',  // 霓虹粉红
+    neonCyan: 0x00ffff,
+    neonMagenta: 0xff00ff,
   },
   // 动画配置
   animation: {
@@ -35,7 +36,7 @@ export const UI_CONFIG = {
 };
 
 /**
- * 创建圆角矩形面板
+ * 创建霓虹风格面板
  */
 export function createPanel(
   scene: Phaser.Scene,
@@ -54,22 +55,30 @@ export function createPanel(
   const {
     bgColor = UI_CONFIG.colors.panelBg,
     bgAlpha = UI_CONFIG.colors.panelBgAlpha,
-    borderRadius = 20,
-    borderColor,
-    borderWidth = 0,
+    borderRadius = 8, // 更方正的边角
+    borderColor = UI_CONFIG.colors.neonCyan,
+    borderWidth = 2,
   } = options || {};
 
   const graphics = scene.add.graphics();
+  const left = x - width / 2;
+  const top = y - height / 2;
 
-  // 绘制填充
+  // 外发光层
+  graphics.fillStyle(borderColor, 0.1);
+  graphics.fillRoundedRect(left - 4, top - 4, width + 8, height + 8, borderRadius + 2);
+
+  // 主背景
   graphics.fillStyle(bgColor, bgAlpha);
-  graphics.fillRoundedRect(x - width / 2, y - height / 2, width, height, borderRadius);
+  graphics.fillRoundedRect(left, top, width, height, borderRadius);
 
-  // 绘制边框（如果有）
-  if (borderWidth > 0 && borderColor !== undefined) {
-    graphics.lineStyle(borderWidth, borderColor, 1);
-    graphics.strokeRoundedRect(x - width / 2, y - height / 2, width, height, borderRadius);
-  }
+  // 霓虹边框
+  graphics.lineStyle(borderWidth, borderColor, 0.9);
+  graphics.strokeRoundedRect(left, top, width, height, borderRadius);
+
+  // 内部高光线
+  graphics.lineStyle(1, 0xffffff, 0.2);
+  graphics.strokeRoundedRect(left + 3, top + 3, width - 6, height - 6, borderRadius - 1);
 
   graphics.setDepth(90);
   return graphics;

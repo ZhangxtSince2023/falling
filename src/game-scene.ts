@@ -13,6 +13,9 @@ import {
   createImpactParticles,
   squashBallAnimation,
   flashPlatform,
+  createPlayerTrail,
+  updateTrailEffect,
+  resetTrailEffect,
 } from './visual-effects.ts';
 import { vibrate } from './haptics.ts';
 import { PlatformSystem } from './platform-system.ts';
@@ -53,13 +56,13 @@ function create(this: Phaser.Scene): void {
   GAME_HEIGHT = this.scale.height;
   currentScene = this;
 
-  // 创建渐变背景
+  // 创建深色渐变背景 (霓虹风格)
   const graphics = this.add.graphics();
   graphics.fillGradientStyle(
-    0xff6b9d,
-    0xff6b9d,
-    0xffa06b,
-    0xffa06b,
+    0x0a0a2e, // 深蓝紫色顶部
+    0x0a0a2e,
+    0x1a0a1a, // 深紫红色底部
+    0x1a0a1a,
     1,
     1,
     1,
@@ -68,27 +71,49 @@ function create(this: Phaser.Scene): void {
   graphics.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
   graphics.setDepth(-10);
 
-  // 创建顶部危险区域
+  // 创建顶部危险区域 (霓虹粉红)
   const topDangerZone = this.add.rectangle(
     GAME_WIDTH / 2,
     25,
     GAME_WIDTH,
     50,
-    0xff0000,
-    0.3
+    0xff0088,
+    0.25
   );
   topDangerZone.setDepth(-1);
 
-  // 创建底部危险区域
+  // 顶部危险区域边线
+  const topDangerLine = this.add.rectangle(
+    GAME_WIDTH / 2,
+    50,
+    GAME_WIDTH,
+    2,
+    0xff0088,
+    0.8
+  );
+  topDangerLine.setDepth(-1);
+
+  // 创建底部危险区域 (霓虹粉红)
   const bottomDangerZone = this.add.rectangle(
     GAME_WIDTH / 2,
     GAME_HEIGHT - 25,
     GAME_WIDTH,
     50,
-    0xff0000,
-    0.3
+    0xff0088,
+    0.25
   );
   bottomDangerZone.setDepth(-1);
+
+  // 底部危险区域边线
+  const bottomDangerLine = this.add.rectangle(
+    GAME_WIDTH / 2,
+    GAME_HEIGHT - 50,
+    GAME_WIDTH,
+    2,
+    0xff0088,
+    0.8
+  );
+  bottomDangerLine.setDepth(-1);
 
   // 创建云朵装饰
   clouds = createClouds(this, GAME_WIDTH, GAME_HEIGHT);
@@ -155,7 +180,11 @@ function update(this: Phaser.Scene, _time: number, delta: number): void {
   // 输入更新
   inputHandler.applyKeyboardControl();
 
-  // 更新云朵
+  // 更新拖尾效果
+  createPlayerTrail(this, playerController.sprite);
+  updateTrailEffect(delta);
+
+  // 更新星星
   updateClouds(
     clouds,
     deltaSeconds,
@@ -314,6 +343,7 @@ function resetGame(): void {
   inputHandler?.reset();
   platformSystem?.reset();
   playerController?.resetFlags();
+  resetTrailEffect();
 }
 
 
