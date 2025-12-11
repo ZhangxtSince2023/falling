@@ -7,8 +7,20 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
-      input: 'index.html'
+      input: 'index.html',
+      output: {
+        manualChunks: {
+          phaser: ['phaser'],
+          capacitor: [
+            '@capacitor/core',
+            '@capacitor/haptics',
+            '@capacitor/splash-screen',
+            '@capacitor/status-bar'
+          ]
+        }
+      }
     }
   },
   server: {

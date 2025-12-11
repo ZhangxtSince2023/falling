@@ -28,6 +28,7 @@ let gameOver = false;
 let gameStarted = false;
 let clouds: Phaser.GameObjects.Ellipse[] = [];
 let score = 0;
+let lastDisplayedScore = -1; // 用于脏检查，避免每帧重绘
 let scoreText: Phaser.GameObjects.Text;
 let gameOverText: Phaser.GameObjects.Text;
 let restartButton: Phaser.GameObjects.Text;
@@ -172,7 +173,11 @@ function update(this: Phaser.Scene, _time: number, delta: number): void {
   }
 
   score = platformSystem.getScore();
-  scoreText.setText(i18n.t('score') + ': ' + score);
+  // 脏检查：只在分数变化时才更新文本，避免每帧重绘
+  if (score !== lastDisplayedScore) {
+    scoreText.setText(i18n.t('score') + ': ' + score);
+    lastDisplayedScore = score;
+  }
 
   // 输入更新
   inputHandler.applyKeyboardControl();
@@ -371,12 +376,23 @@ function triggerGameOver(scene: Phaser.Scene): void {
   });
 }
 
+// 清理开始界面元素（防止内存泄漏）
+function cleanupStartScreen(): void {
+  startScreenElements.forEach((element) => {
+    if (element?.destroy) element.destroy();
+  });
+  startScreenElements = [];
+}
+
 // 重置游戏
 function resetGame(): void {
   gameOver = false;
   gameStarted = false;
   score = 0;
+  lastDisplayedScore = -1; // 重置分数显示状态
   clouds = [];
+  // 清理开始界面元素（修复换语言时的内存泄漏）
+  cleanupStartScreen();
   inputHandler?.reset();
   platformSystem?.reset();
   playerController?.resetFlags();
@@ -398,11 +414,36 @@ function cycleLanguage(): void {
   }
 }
 
-// 设置场景函数并创建游戏实例
+// 设置场景函数并创建游戏实例（惰性单例，避免 HMR/重复导入多实例）
 gameConfig.scene = {
   preload: preload,
   create: create,
   update: update,
 };
 
-new Phaser.Game(gameConfig);
+let phaserGame: Phaser.Game | null = null;
+
+export function createGame(): Phaser.Game {
+  if (phaserGame) return phaserGame;
+  phaserGame = new Phaser.Game(gameConfig);
+  return phaserGame;
+}
+
+// 兼容直接通过 <script type="module"> 加载的场景入口，
+// 并在 Vite HMR 下防止重复实例化
+const globalScope = globalThis as { __FALLING_GAME__?: Phaser.Game };
+
+if (!globalScope.__FALLING_GAME__) {
+    globalScope.__FALLING_GAME__ = createGame();
+}
+
+// 兼容 Vite HMR：谨慎访问 import.meta.hot 避免类型错误
+const hot = (import.meta as { hot?: { dispose: (cb: () => void) => void } })
+    .hot;
+if (hot) {
+    hot.dispose(() => {
+        globalScope.__FALLING_GAME__?.destroy(true);
+        globalScope.__FALLING_GAME__ = undefined;
+        phaserGame = null;
+    });
+}

@@ -24,6 +24,9 @@ export class PlatformSystem {
   private passedPlatforms: number;
   public totalPlatformsGenerated: number;
   private spawnStrategy: PlatformSpawnStrategy;
+  // 对象池：存放被回收的平台，供复用 (Codex 优化 - 减少 GC 压力)
+  private platformPool: GamePlatform[];
+  private readonly POOL_MAX_SIZE = 20;
 
   constructor(scene: Phaser.Scene, gameWidth: number, gameHeight: number) {
     this.scene = scene;
@@ -34,6 +37,7 @@ export class PlatformSystem {
     this.baseTextureWidth = Math.ceil(DIFFICULTY_CONFIG.BASE_PLATFORM_WIDTH_MAX);
     this.spawnHorizontalPadding = 80;
     this.platformTextures = [];
+    this.platformPool = [];
     this.initTextures();
     this.spawnTimer = 0;
     this.passedPlatforms = 0;
@@ -161,13 +165,13 @@ export class PlatformSystem {
           -difficulty.riseSpeed;
       }
 
-      // 清理和计分
+      // 清理和计分：使用对象池回收而非销毁 (Codex 优化 - 减少 GC)
       if (platform.y < -50) {
         if (!platform.counted) {
           this.passedPlatforms++;
           platform.counted = true;
         }
-        platform.destroy();
+        this.recyclePlatform(platform);
       }
     }
 
@@ -189,6 +193,52 @@ export class PlatformSystem {
     const newY = this.gameHeight + difficulty.riseSpeed * bufferTime;
 
     this.createPlatform(x, newY, difficulty, width);
+  }
+
+  // 回收平台到对象池 (Codex 优化 - 减少 GC 压力)
+  private recyclePlatform(platform: GamePlatform): void {
+    // 从物理组中移除（但不销毁）
+    this.group.remove(platform, false, false);
+    // 隐藏并禁用
+    platform.setActive(false);
+    platform.setVisible(false);
+    if (platform.body) {
+      (platform.body as Phaser.Physics.Arcade.Body).enable = false;
+    }
+    // 添加到对象池（有上限，超出则销毁）
+    if (this.platformPool.length < this.POOL_MAX_SIZE) {
+      this.platformPool.push(platform);
+    } else {
+      platform.destroy();
+    }
+  }
+
+  // 从对象池获取或创建新平台 (Codex 优化 - 减少 GC 压力)
+  private getOrCreatePlatform(
+    x: number,
+    y: number,
+    textureKey: string
+  ): GamePlatform {
+    let platform: GamePlatform;
+
+    if (this.platformPool.length > 0) {
+      // 从对象池复用
+      platform = this.platformPool.pop()!;
+      platform.setTexture(textureKey);
+      platform.setPosition(x, y);
+      platform.setActive(true);
+      platform.setVisible(true);
+      if (platform.body) {
+        (platform.body as Phaser.Physics.Arcade.Body).enable = true;
+      }
+      this.group.add(platform);
+    } else {
+      // 创建新平台
+      platform = this.scene.physics.add.sprite(x, y, textureKey) as GamePlatform;
+      this.group.add(platform);
+    }
+
+    return platform;
   }
 
   private createPlatform(
@@ -217,13 +267,9 @@ export class PlatformSystem {
     const textureInfo = this.platformTextures[randomColorIndex];
     const colorScheme = textureInfo.scheme;
 
-    const platform = this.scene.physics.add.sprite(
-      safeX,
-      y,
-      textureInfo.key
-    ) as GamePlatform;
+    // 使用对象池获取或创建平台 (Codex 优化)
+    const platform = this.getOrCreatePlatform(safeX, y, textureInfo.key);
     platform.setDisplaySize(width, height);
-    this.group.add(platform);
 
     if (platform.body) {
       const body = platform.body as Phaser.Physics.Arcade.Body;
@@ -244,6 +290,9 @@ export class PlatformSystem {
     this.spawnTimer = 0;
     this.passedPlatforms = 0;
     this.totalPlatformsGenerated = 0;
+    // 清理对象池 (Codex 优化)
+    this.platformPool.forEach((p) => p.destroy());
+    this.platformPool = [];
     // 重置生成策略 (Gemini + Claude 优化)
     this.spawnStrategy.reset();
   }

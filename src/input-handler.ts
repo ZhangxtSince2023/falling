@@ -35,6 +35,16 @@ export class InputHandler {
     this.scene.input.on('pointerdown', this.onPointerDown, this);
     this.scene.input.on('pointermove', this.onPointerMove, this);
     this.scene.input.on('pointerup', this.onPointerUp, this);
+
+    // 监听 scene shutdown 事件，自动清理
+    this.scene.events.once('shutdown', this.detach, this);
+  }
+
+  detach(): void {
+    this.scene.input.off('pointerdown', this.onPointerDown, this);
+    this.scene.input.off('pointermove', this.onPointerMove, this);
+    this.scene.input.off('pointerup', this.onPointerUp, this);
+    this.cursors = null;
   }
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
