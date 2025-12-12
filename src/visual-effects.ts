@@ -4,7 +4,8 @@
 import Phaser from 'phaser';
 import type { ColorScheme } from './types.ts';
 
-// 霓虹主色调
+// 粉色主色调（匹配新角色）
+const NEON_PINK = 0xff88aa;
 const NEON_CYAN = 0x00ffff;
 
 // 拖尾效果相关
@@ -36,18 +37,18 @@ export function createPlayerTrail(
   lastTrailX = player.x;
   lastTrailY = player.y;
 
-  // 创建拖尾粒子
-  const size = player.displayWidth * 0.7;
+  // 创建拖尾粒子 - 粉色方块
+  const size = player.displayWidth * 0.6;
   const trail = scene.add.rectangle(
     player.x,
     player.y,
     size,
     size,
-    NEON_CYAN,
-    0.5
+    NEON_PINK,
+    0.4
   );
   trail.setDepth(player.depth - 1);
-  trail.setStrokeStyle(2, NEON_CYAN, 0.8);
+  trail.setStrokeStyle(2, NEON_PINK, 0.6);
 
   trailParticles.push({ sprite: trail, life: 1 });
 }
@@ -208,7 +209,7 @@ export function shakeCamera(scene: Phaser.Scene): void {
   }
 }
 
-// 球体挤压动画（增强版）
+// 角色挤压动画（方形积木风格）
 export function squashBallAnimation(
   scene: Phaser.Scene,
   ball: Phaser.GameObjects.Sprite,
@@ -218,33 +219,34 @@ export function squashBallAnimation(
 
   scene.tweens.killTweensOf(ball);
 
-  // 根据撞击速度计算挤压程度
+  const baseScale = 0.22; // 新角色的基础缩放
+  // 根据撞击速度计算挤压程度（方形积木挤压幅度较小）
   const velocityFactor = Math.min(impactVelocity / 200, 1);
-  const squashX = 0.5 + 0.25 * velocityFactor; // 0.5 ~ 0.75
-  const squashY = 0.5 - 0.2 * velocityFactor; // 0.5 ~ 0.3
+  const squashX = baseScale * (1 + 0.15 * velocityFactor); // 横向微微拉宽
+  const squashY = baseScale * (1 - 0.12 * velocityFactor); // 纵向压扁
 
   // 挤压阶段
   scene.tweens.add({
     targets: ball,
     scaleX: squashX,
     scaleY: squashY,
-    duration: 60,
+    duration: 50,
     ease: 'Quad.easeOut',
     onComplete: () => {
       // 反弹拉伸阶段
       scene.tweens.add({
         targets: ball,
-        scaleX: 0.45,
-        scaleY: 0.58,
-        duration: 80,
+        scaleX: baseScale * 0.92,
+        scaleY: baseScale * 1.08,
+        duration: 70,
         ease: 'Quad.easeOut',
         onComplete: () => {
           // 恢复原状（带弹性）
           scene.tweens.add({
             targets: ball,
-            scaleX: 0.5,
-            scaleY: 0.5,
-            duration: 150,
+            scaleX: baseScale,
+            scaleY: baseScale,
+            duration: 120,
             ease: 'Elastic.easeOut',
           });
         },
@@ -288,7 +290,7 @@ export function createImpactRing(
   }
 }
 
-// 创建方块发光闪烁效果 - 霓虹风格
+// 创建方块发光闪烁效果 - 粉色积木风格
 export function createBallGlow(
   scene: Phaser.Scene,
   ball: Phaser.GameObjects.Sprite,
@@ -296,8 +298,8 @@ export function createBallGlow(
 ): void {
   if (!ball) return;
 
-  const color = colorScheme?.primary ?? NEON_CYAN;
-  const size = ball.displayWidth * 0.9;
+  const color = colorScheme?.primary ?? NEON_PINK;
+  const size = ball.displayWidth * 0.85;
 
   // 方形发光
   const glow = scene.add.rectangle(ball.x, ball.y, size, size, color, 0.5);

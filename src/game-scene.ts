@@ -47,8 +47,8 @@ let GAME_WIDTH: number;
 let gameOverElements: GameOverPanelElements | null = null;
 
 function preload(this: Phaser.Scene): void {
-  // 加载 AI 生成的图片资源
-  this.load.svg('ball', 'assets/images/ball.svg', { width: 64, height: 64 });
+  // 加载玩家角色图片
+  this.load.image('player', 'assets/images/player.png');
 }
 
 function create(this: Phaser.Scene): void {
