@@ -2,9 +2,10 @@
  * 平台生成与回收管理
  */
 import Phaser from 'phaser';
-import { COLOR_SCHEMES, DIFFICULTY_CONFIG, getDifficulty } from './game-config.ts';
+import { getColorSchemes, DIFFICULTY_CONFIG, getDifficulty } from './game-config.ts';
 import { PlatformSpawnStrategy } from './platform-spawn-strategy.ts';
 import type { ColorScheme, Difficulty, GamePlatform } from './types.ts';
+import { themeManager } from './theme';
 
 interface TextureInfo {
   key: string;
@@ -82,41 +83,88 @@ export class PlatformSystem {
   }
 
   private initTextures(): void {
+    const colorSchemes = getColorSchemes();
+    const mode = themeManager.getMode();
+    const isDark = themeManager.isDark();
+
     this.platformTextures = [];
-    COLOR_SCHEMES.slice(0, 5).forEach((scheme, index) => {
-      const key = `platform_texture_${index}`;
+    colorSchemes.slice(0, 5).forEach((scheme, index) => {
+      const key = `platform_texture_${mode}_${index}`;
       if (!this.scene.textures.exists(key)) {
         const graphics = this.scene.add.graphics();
         const w = this.baseTextureWidth;
         const h = this.platformHeight;
         const radius = h / 2;
 
-        // 霓虹发光效果：多层叠加
-        // 外发光层 (模糊光晕)
-        graphics.fillStyle(scheme.primary, 0.15);
-        graphics.fillRoundedRect(-4, -4, w + 8, h + 8, radius + 2);
+        if (isDark) {
+          // 暗色主题：霓虹发光效果
+          // 外发光层 (模糊光晕)
+          graphics.fillStyle(scheme.primary, 0.15);
+          graphics.fillRoundedRect(-4, -4, w + 8, h + 8, radius + 2);
 
-        // 中发光层
-        graphics.fillStyle(scheme.primary, 0.3);
-        graphics.fillRoundedRect(-2, -2, w + 4, h + 4, radius + 1);
+          // 中发光层
+          graphics.fillStyle(scheme.primary, 0.3);
+          graphics.fillRoundedRect(-2, -2, w + 4, h + 4, radius + 1);
 
-        // 核心填充 (暗色透明，让边框更突出)
-        graphics.fillStyle(0x000000, 0.4);
-        graphics.fillRoundedRect(0, 0, w, h, radius);
+          // 核心填充 (暗色透明，让边框更突出)
+          graphics.fillStyle(0x000000, 0.4);
+          graphics.fillRoundedRect(0, 0, w, h, radius);
 
-        // 主霓虹边框
-        graphics.lineStyle(3, scheme.primary, 1);
-        graphics.strokeRoundedRect(0, 0, w, h, radius);
+          // 主霓虹边框
+          graphics.lineStyle(3, scheme.primary, 1);
+          graphics.strokeRoundedRect(0, 0, w, h, radius);
 
-        // 内部高光线条
-        graphics.lineStyle(1, 0xffffff, 0.6);
-        graphics.strokeRoundedRect(2, 2, w - 4, h - 4, radius - 1);
+          // 内部高光线条
+          graphics.lineStyle(1, 0xffffff, 0.6);
+          graphics.strokeRoundedRect(2, 2, w - 4, h - 4, radius - 1);
+        } else {
+          // 亮色主题：柔和粉彩效果
+          // 外层柔和阴影
+          graphics.fillStyle(scheme.secondary, 0.2);
+          graphics.fillRoundedRect(-3, -3, w + 6, h + 6, radius + 2);
+
+          // 主体填充 (柔和渐变感)
+          graphics.fillStyle(scheme.primary, 0.9);
+          graphics.fillRoundedRect(0, 0, w, h, radius);
+
+          // 顶部高光
+          graphics.fillStyle(0xffffff, 0.4);
+          graphics.fillRoundedRect(2, 2, w - 4, h / 2 - 2, radius - 1);
+
+          // 柔和边框
+          graphics.lineStyle(2, scheme.secondary, 0.8);
+          graphics.strokeRoundedRect(0, 0, w, h, radius);
+        }
 
         graphics.generateTexture(key, w + 8, h + 8);
         graphics.destroy();
       }
       this.platformTextures.push({ key, scheme });
     });
+  }
+
+  // 重新生成纹理（主题切换时调用）
+  regenerateTextures(): void {
+    // 移除旧纹理
+    for (let i = 0; i < this.platformTextures.length; i++) {
+      const t = this.platformTextures[i];
+      if (this.scene.textures.exists(t.key)) {
+        this.scene.textures.remove(t.key);
+      }
+    }
+
+    // 生成新主题的纹理
+    this.initTextures();
+
+    // 更新现有平台的纹理
+    const platforms = this.group.getChildren() as GamePlatform[];
+    for (let i = 0; i < platforms.length; i++) {
+      const platform = platforms[i];
+      const randomIndex = Phaser.Math.Between(0, this.platformTextures.length - 1);
+      const textureInfo = this.platformTextures[randomIndex];
+      platform.setTexture(textureInfo.key);
+      platform.colorScheme = textureInfo.scheme;
+    }
   }
 
   createInitialPlatforms(): void {
@@ -291,7 +339,9 @@ export class PlatformSystem {
     this.passedPlatforms = 0;
     this.totalPlatformsGenerated = 0;
     // 清理对象池 (Codex 优化)
-    this.platformPool.forEach((p) => p.destroy());
+    for (let i = 0; i < this.platformPool.length; i++) {
+      this.platformPool[i].destroy();
+    }
     this.platformPool = [];
     // 重置生成策略 (Gemini + Claude 优化)
     this.spawnStrategy.reset();

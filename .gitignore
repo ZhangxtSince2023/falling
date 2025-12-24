@@ -64,6 +64,7 @@ resources/*.jpeg
 *.temp
 .cache/
 .playwright-mcp/
+.gemini-clipboard/
 
 # macOS
 .DS_Store

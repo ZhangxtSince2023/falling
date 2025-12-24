@@ -1,12 +1,25 @@
 /**
- * 视觉特效系统 - 霓虹风格
+ * 视觉特效系统 - 支持主题切换
  */
 import Phaser from 'phaser';
 import type { ColorScheme } from './types.ts';
+import { themeManager } from './theme';
 
-// 粉色主色调（匹配新角色）
-const NEON_PINK = 0xff88aa;
-const NEON_CYAN = 0x00ffff;
+// 获取当前主题的特效颜色
+export function getEffectColors() {
+  return themeManager.getTheme().colors.effects;
+}
+
+// 获取拖尾颜色
+function getTrailColor(): number {
+  return getEffectColors().trailColor;
+}
+
+// 获取默认粒子颜色
+function getDefaultParticleScheme(): ColorScheme {
+  const effects = getEffectColors();
+  return { primary: effects.particlePrimary, secondary: effects.particleSecondary };
+}
 
 // 拖尾效果相关
 interface TrailParticle {
@@ -37,18 +50,19 @@ export function createPlayerTrail(
   lastTrailX = player.x;
   lastTrailY = player.y;
 
-  // 创建拖尾粒子 - 粉色方块
+  // 创建拖尾粒子 - 使用主题颜色
+  const trailColor = getTrailColor();
   const size = player.displayWidth * 0.6;
   const trail = scene.add.rectangle(
     player.x,
     player.y,
     size,
     size,
-    NEON_PINK,
+    trailColor,
     0.4
   );
   trail.setDepth(player.depth - 1);
-  trail.setStrokeStyle(2, NEON_PINK, 0.6);
+  trail.setStrokeStyle(2, trailColor, 0.6);
 
   trailParticles.push({ sprite: trail, life: 1 });
 }
@@ -128,14 +142,14 @@ export function flashPlatform(
   });
 }
 
-// 创建碰撞粒子效果 - 霓虹风格
+// 创建碰撞粒子效果 - 支持主题切换
 export function createImpactParticles(
   scene: Phaser.Scene,
   x: number,
   y: number,
   colorScheme?: ColorScheme
 ): void {
-  const scheme = colorScheme ?? { primary: NEON_CYAN, secondary: 0x0088ff };
+  const scheme = colorScheme ?? getDefaultParticleScheme();
 
   // 霓虹方块粒子
   const particleCount = 8;
@@ -255,14 +269,14 @@ export function squashBallAnimation(
   });
 }
 
-// 创建撞击冲击波效果 - 霓虹方形波
+// 创建撞击冲击波效果 - 支持主题切换
 export function createImpactRing(
   scene: Phaser.Scene,
   x: number,
   y: number,
   colorScheme?: ColorScheme
 ): void {
-  const scheme = colorScheme ?? { primary: NEON_CYAN, secondary: 0x0088ff };
+  const scheme = colorScheme ?? getDefaultParticleScheme();
 
   // 创建多层方形冲击波
   for (let i = 0; i < 2; i++) {
@@ -290,7 +304,7 @@ export function createImpactRing(
   }
 }
 
-// 创建方块发光闪烁效果 - 粉色积木风格
+// 创建方块发光闪烁效果 - 支持主题切换
 export function createBallGlow(
   scene: Phaser.Scene,
   ball: Phaser.GameObjects.Sprite,
@@ -298,7 +312,7 @@ export function createBallGlow(
 ): void {
   if (!ball) return;
 
-  const color = colorScheme?.primary ?? NEON_PINK;
+  const color = colorScheme?.primary ?? getTrailColor();
   const size = ball.displayWidth * 0.85;
 
   // 方形发光
@@ -332,7 +346,7 @@ interface NeonStar {
 
 let stars: NeonStar[] = [];
 
-// 创建霓虹星星装饰
+// 创建星星装饰 - 支持主题切换
 export function createClouds(
   scene: Phaser.Scene,
   gameWidth: number,
@@ -342,8 +356,8 @@ export function createClouds(
   stars.forEach((s) => s.shape.destroy());
   stars = [];
 
-  // 创建霓虹星星
-  const starColors = [NEON_CYAN, 0xff00ff, 0x00ff88, 0xffff00];
+  // 使用主题颜色创建星星
+  const starColors = getEffectColors().starColors;
 
   for (let i = 0; i < 20; i++) {
     const size = Phaser.Math.Between(2, 5);

@@ -31,7 +31,7 @@ export class InputHandler {
   }
 
   attach(): void {
-    this.cursors = this.scene.input.keyboard!.createCursorKeys();
+    this.cursors = this.scene.input.keyboard?.createCursorKeys() ?? null;
     this.scene.input.on('pointerdown', this.onPointerDown, this);
     this.scene.input.on('pointermove', this.onPointerMove, this);
     this.scene.input.on('pointerup', this.onPointerUp, this);

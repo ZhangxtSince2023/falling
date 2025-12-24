@@ -3,8 +3,14 @@
  */
 import Phaser from 'phaser';
 import type { ColorScheme, DifficultyConfig, Difficulty } from './types.ts';
+import { themeManager } from './theme';
 
-// 霓虹风格颜色配置
+// 获取当前主题的颜色配置
+export function getColorSchemes(): ColorScheme[] {
+  return themeManager.getTheme().colors.platformSchemes;
+}
+
+// 保留向后兼容（将被逐步替换）
 export const COLOR_SCHEMES: ColorScheme[] = [
   { primary: 0x00ffff, secondary: 0x0088ff }, // 青色霓虹
   { primary: 0xff00ff, secondary: 0x8800ff }, // 品红霓虹
@@ -40,7 +46,7 @@ export const DIFFICULTY_CONFIG: DifficultyConfig = {
 export const lerp = (start: number, end: number, t: number): number =>
   start + (end - start) * t;
 
-// 计算当前难度参数 - 统一难度曲线到 10000 分
+// 计算当前难度参数 - 以 MAX_DIFFICULTY_SCORE 归一化到 [0, 1]
 export function getDifficulty(
   currentScore: number,
   platformCount: number = 0
@@ -115,5 +121,8 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
+  audio: {
+    disableWebAudio: false, // 使用 Web Audio API (iOS 支持更好)
   },
 };

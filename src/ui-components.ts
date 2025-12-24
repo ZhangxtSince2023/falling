@@ -3,27 +3,38 @@
  * 提供统一的 UI 风格：可爱圆润字体、面板、按钮动画等
  */
 import Phaser from 'phaser';
+import { themeManager } from './theme';
 
-// UI 配置常量 - 霓虹风格
+// 获取当前主题的 UI 颜色
+export function getUIColors() {
+  return themeManager.getTheme().colors.ui;
+}
+
+// UI 配置常量
 export const UI_CONFIG = {
   // 字体配置
   fonts: {
     primary: '"ZCOOL KuaiLe", "Kosugi Maru", "Nunito", sans-serif',
     number: '"Nunito", "ZCOOL KuaiLe", "Kosugi Maru", sans-serif',
   },
-  // 霓虹颜色配置
-  colors: {
-    panelBg: 0x0a0a2e,
-    panelBgAlpha: 0.85,
-    buttonBg: 0x000000,
-    buttonBgAlpha: 0.5,
-    buttonBorder: 0x00ffff,
-    textPrimary: '#00ffff', // 霓虹青色
-    textAccent: '#ff00ff',  // 霓虹品红
-    textSuccess: '#00ff88', // 霓虹绿色
-    textDanger: '#ff0088',  // 霓虹粉红
-    neonCyan: 0x00ffff,
-    neonMagenta: 0xff00ff,
+  // 颜色配置 - 动态获取
+  get colors() {
+    const uiColors = getUIColors();
+    return {
+      panelBg: uiColors.panelBg,
+      panelBgAlpha: uiColors.panelBgAlpha,
+      buttonBg: uiColors.buttonBg,
+      buttonBgAlpha: uiColors.buttonBgAlpha,
+      buttonBorder: uiColors.buttonBorder,
+      textPrimary: uiColors.textPrimary,
+      textAccent: uiColors.textAccent,
+      textSuccess: uiColors.textSuccess,
+      textDanger: uiColors.textDanger,
+      textStroke: uiColors.textStroke,
+      textStrokeThickness: uiColors.textStrokeThickness,
+      neonCyan: uiColors.neonPrimary,
+      neonMagenta: uiColors.neonSecondary,
+    };
   },
   // 动画配置
   animation: {
@@ -64,21 +75,17 @@ export function createPanel(
   const left = x - width / 2;
   const top = y - height / 2;
 
-  // 外发光层
-  graphics.fillStyle(borderColor, 0.1);
-  graphics.fillRoundedRect(left - 4, top - 4, width + 8, height + 8, borderRadius + 2);
+  // 阴影/辉光层
+  graphics.fillStyle(borderColor, 0.15);
+  graphics.fillRoundedRect(left + 2, top + 2, width, height, borderRadius);
 
   // 主背景
   graphics.fillStyle(bgColor, bgAlpha);
   graphics.fillRoundedRect(left, top, width, height, borderRadius);
 
-  // 霓虹边框
-  graphics.lineStyle(borderWidth, borderColor, 0.9);
+  // 边框
+  graphics.lineStyle(borderWidth, borderColor, 0.8);
   graphics.strokeRoundedRect(left, top, width, height, borderRadius);
-
-  // 内部高光线
-  graphics.lineStyle(1, 0xffffff, 0.2);
-  graphics.strokeRoundedRect(left + 3, top + 3, width - 6, height - 6, borderRadius - 1);
 
   graphics.setDepth(90);
   return graphics;
@@ -105,8 +112,8 @@ export function createStyledText(
     fontSize = '32px',
     color = UI_CONFIG.colors.textPrimary,
     fontFamily = UI_CONFIG.fonts.primary,
-    stroke = '#000000',
-    strokeThickness = 4,
+    stroke = UI_CONFIG.colors.textStroke,
+    strokeThickness = UI_CONFIG.colors.textStrokeThickness,
     shadow = true,
   } = options || {};
 
@@ -120,7 +127,8 @@ export function createStyledText(
   });
 
   if (shadow) {
-    textObj.setShadow(2, 2, '#00000088', 4, true, true);
+    // Soft shadow
+    textObj.setShadow(2, 2, 'rgba(0,0,0,0.25)', 2, true, false);
   }
 
   textObj.setOrigin(0.5);
@@ -138,15 +146,16 @@ export function createScoreDisplay(
   initialScore: number = 0
 ): Phaser.GameObjects.Text {
   const scoreText = scene.add.text(x, y, String(initialScore), {
-    fontSize: '56px',
+    fontSize: '64px',
     color: UI_CONFIG.colors.textPrimary,
     fontFamily: UI_CONFIG.fonts.number,
     fontStyle: '900', // Extra bold
-    stroke: '#000000',
-    strokeThickness: 6,
+    stroke: UI_CONFIG.colors.textStroke,
+    strokeThickness: UI_CONFIG.colors.textStrokeThickness * 2, // 分数描边稍微粗一点
   });
 
-  scoreText.setShadow(3, 3, '#00000066', 6, true, true);
+  // Soft shadow
+  scoreText.setShadow(2, 2, 'rgba(0,0,0,0.1)', 2, true, false);
   scoreText.setOrigin(0.5, 0);
   scoreText.setScrollFactor(0);
   scoreText.setDepth(100);
@@ -188,8 +197,8 @@ export function createButton(
     color,
     fontFamily: UI_CONFIG.fonts.primary,
     fontStyle: 'bold',
-    stroke: '#000000',
-    strokeThickness: 3,
+    stroke: UI_CONFIG.colors.textStroke,
+    strokeThickness: Math.max(2, UI_CONFIG.colors.textStrokeThickness - 1),
   });
   buttonText.setOrigin(0.5);
 

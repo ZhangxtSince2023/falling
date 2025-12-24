@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import AVFoundation
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,8 +8,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // 配置 AVAudioSession，使游戏音频即使在静音开关打开时也能播放
+        configureAudioSession()
         return true
+    }
+
+    private func configureAudioSession() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            // 使用 .playback 类别会忽略静音开关
+            try session.setCategory(.playback, mode: .default, options: [])
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+            print("✅ AVAudioSession configured successfully")
+            print("   Category: \(session.category.rawValue)")
+            print("   Mode: \(session.mode.rawValue)")
+            print("   Output volume: \(session.outputVolume)")
+        } catch {
+            print("❌ Failed to set audio session: \(error)")
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -27,6 +44,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        // 重新激活音频会话
+        configureAudioSession()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

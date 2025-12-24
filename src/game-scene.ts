@@ -29,6 +29,8 @@ import {
   type GameOverPanelElements,
 } from './ui-components.ts';
 import type { Difficulty, GamePlatform } from './types.ts';
+import { themeManager, type Theme } from './theme';
+import { audioManager } from './audio-manager';
 
 // 游戏状态
 let playerController: PlayerController;
@@ -46,9 +48,56 @@ let GAME_HEIGHT: number;
 let GAME_WIDTH: number;
 let gameOverElements: GameOverPanelElements | null = null;
 
+// 主题相关元素引用
+let backgroundGraphics: Phaser.GameObjects.Graphics;
+let topDangerZone: Phaser.GameObjects.Rectangle;
+let topDangerLine: Phaser.GameObjects.Rectangle;
+let bottomDangerZone: Phaser.GameObjects.Rectangle;
+let bottomDangerLine: Phaser.GameObjects.Rectangle;
+let unsubscribeTheme: (() => void) | null = null;
+
+function safeDestroy(element: unknown, label: string): void {
+  if (!element) return;
+  const maybeDestroy = (element as { destroy?: unknown }).destroy;
+  if (typeof maybeDestroy !== 'function') return;
+  try {
+    (maybeDestroy as () => void).call(element);
+  } catch (err) {
+    console.warn(`[GameScene] Failed to destroy ${label}`, err);
+  }
+}
+
+function safeDestroyAll(
+  elements: Array<unknown> | undefined | null,
+  label: string
+): void {
+  if (!elements || elements.length === 0) return;
+  for (let i = 0; i < elements.length; i++) {
+    safeDestroy(elements[i], `${label}[${i}]`);
+  }
+}
+
+function applyBackgroundGradient(bgColors: Theme['colors']['background']): void {
+  if (!backgroundGraphics) return;
+  backgroundGraphics.clear();
+  backgroundGraphics.fillGradientStyle(
+    bgColors.top,
+    bgColors.top,
+    bgColors.bottom,
+    bgColors.bottom,
+    1,
+    1,
+    1,
+    1
+  );
+  backgroundGraphics.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+}
+
 function preload(this: Phaser.Scene): void {
   // 加载玩家角色图片
   this.load.image('player', 'assets/images/player.png');
+  // 加载 BGM
+  audioManager.preload(this);
 }
 
 function create(this: Phaser.Scene): void {
@@ -56,67 +105,78 @@ function create(this: Phaser.Scene): void {
   GAME_HEIGHT = this.scale.height;
   currentScene = this;
 
-  // 创建深色渐变背景 (霓虹风格)
-  const graphics = this.add.graphics();
-  graphics.fillGradientStyle(
-    0x0a0a2e, // 深蓝紫色顶部
-    0x0a0a2e,
-    0x1a0a1a, // 深紫红色底部
-    0x1a0a1a,
-    1,
-    1,
-    1,
-    1
-  );
-  graphics.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  graphics.setDepth(-10);
+  // 获取当前主题颜色
+  const theme = themeManager.getTheme();
+  const bgColors = theme.colors.background;
+  const dangerColors = theme.colors.danger;
 
-  // 创建顶部危险区域 (霓虹粉红)
-  const topDangerZone = this.add.rectangle(
+  // 创建渐变背景
+  backgroundGraphics = this.add.graphics();
+  applyBackgroundGradient(bgColors);
+  backgroundGraphics.setDepth(-10);
+
+  // 创建顶部危险区域
+  topDangerZone = this.add.rectangle(
     GAME_WIDTH / 2,
     25,
     GAME_WIDTH,
     50,
-    0xff0088,
-    0.25
+    dangerColors.fill,
+    dangerColors.fillAlpha
   );
   topDangerZone.setDepth(-1);
 
   // 顶部危险区域边线
-  const topDangerLine = this.add.rectangle(
+  topDangerLine = this.add.rectangle(
     GAME_WIDTH / 2,
     50,
     GAME_WIDTH,
     2,
-    0xff0088,
-    0.8
+    dangerColors.line,
+    dangerColors.lineAlpha
   );
   topDangerLine.setDepth(-1);
 
-  // 创建底部危险区域 (霓虹粉红)
-  const bottomDangerZone = this.add.rectangle(
+  // 创建底部危险区域
+  bottomDangerZone = this.add.rectangle(
     GAME_WIDTH / 2,
     GAME_HEIGHT - 25,
     GAME_WIDTH,
     50,
-    0xff0088,
-    0.25
+    dangerColors.fill,
+    dangerColors.fillAlpha
   );
   bottomDangerZone.setDepth(-1);
 
   // 底部危险区域边线
-  const bottomDangerLine = this.add.rectangle(
+  bottomDangerLine = this.add.rectangle(
     GAME_WIDTH / 2,
     GAME_HEIGHT - 50,
     GAME_WIDTH,
     2,
-    0xff0088,
-    0.8
+    dangerColors.line,
+    dangerColors.lineAlpha
   );
   bottomDangerLine.setDepth(-1);
 
-  // 创建云朵装饰
+  // 创建星星装饰
   clouds = createClouds(this, GAME_WIDTH, GAME_HEIGHT);
+
+  // 订阅主题变化事件
+  unsubscribeTheme = themeManager.subscribe((newTheme) => {
+    onThemeChange(this, newTheme);
+  });
+
+  // 监听场景销毁事件，清理所有订阅和资源
+  this.events.once('shutdown', () => {
+    // 清理场景的主题订阅
+    if (unsubscribeTheme) {
+      unsubscribeTheme();
+      unsubscribeTheme = null;
+    }
+    // 清理 audioManager（会重置 isInitialized，允许新场景重新初始化）
+    audioManager.destroy();
+  });
 
   // 平台管理
   platformSystem = new PlatformSystem(this, GAME_WIDTH, GAME_HEIGHT);
@@ -142,6 +202,9 @@ function create(this: Phaser.Scene): void {
   inputHandler.shouldHandle = () => gameStarted && !gameOver;
   inputHandler.attach();
 
+  // 初始化音频系统
+  audioManager.init(this);
+
   showStartScreen(this);
 }
 
@@ -149,6 +212,15 @@ function update(this: Phaser.Scene, _time: number, delta: number): void {
   if (!gameStarted || gameOver) return;
 
   const deltaSeconds = delta / 1000;
+
+  const playerSprite = playerController?.sprite;
+  if (!playerSprite || !playerSprite.active) {
+    console.warn(
+      '[GameScene] Player sprite missing/inactive during update; triggering game over'
+    );
+    triggerGameOver(this);
+    return;
+  }
 
   playerController.markAirborne();
 
@@ -163,8 +235,8 @@ function update(this: Phaser.Scene, _time: number, delta: number): void {
 
   // 检查失败条件
   if (
-    playerController.sprite.y <= 35 ||
-    playerController.sprite.y >= GAME_HEIGHT - 50
+    playerSprite.y <= 35 ||
+    playerSprite.y >= GAME_HEIGHT - 50
   ) {
     triggerGameOver(this);
     return;
@@ -181,7 +253,7 @@ function update(this: Phaser.Scene, _time: number, delta: number): void {
   inputHandler.applyKeyboardControl();
 
   // 更新拖尾效果
-  createPlayerTrail(this, playerController.sprite);
+  createPlayerTrail(this, playerSprite);
   updateTrailEffect(delta);
 
   // 更新星星
@@ -276,20 +348,21 @@ function showStartScreen(scene: Phaser.Scene): void {
 }
 
 function startGame(scene: Phaser.Scene): void {
-  if (startScreenElements) {
-    startScreenElements.allElements.forEach((element) => {
-      if (element?.destroy) element.destroy();
-    });
-    startScreenElements = null;
-  }
+  cleanupStartScreen();
   scene.physics.resume();
   gameStarted = true;
+
+  // 播放 BGM
+  void audioManager.playBgm();
 }
 
 // 游戏失败
 function triggerGameOver(scene: Phaser.Scene): void {
   // 游戏结束震动反馈
   vibrate('error');
+
+  // 停止 BGM
+  audioManager.stopBgm();
 
   gameOver = true;
   scene.physics.pause();
@@ -317,9 +390,7 @@ function triggerGameOver(scene: Phaser.Scene): void {
 // 清理开始界面元素（防止内存泄漏）
 function cleanupStartScreen(): void {
   if (startScreenElements) {
-    startScreenElements.allElements.forEach((element) => {
-      if (element?.destroy) element.destroy();
-    });
+    safeDestroyAll(startScreenElements.allElements, 'startScreen');
     startScreenElements = null;
   }
 }
@@ -335,15 +406,50 @@ function resetGame(): void {
   cleanupStartScreen();
   // 清理游戏结束元素
   if (gameOverElements) {
-    gameOverElements.allElements.forEach((element) => {
-      if (element?.destroy) element.destroy();
-    });
+    safeDestroyAll(gameOverElements.allElements, 'gameOver');
     gameOverElements = null;
   }
   inputHandler?.reset();
   platformSystem?.reset();
   playerController?.resetFlags();
   resetTrailEffect();
+}
+
+// 主题切换处理
+function onThemeChange(scene: Phaser.Scene, theme: Theme): void {
+  const bgColors = theme.colors.background;
+  const dangerColors = theme.colors.danger;
+  const uiColors = theme.colors.ui;
+
+  // 更新背景渐变
+  applyBackgroundGradient(bgColors);
+
+  // 更新危险区域颜色
+  if (topDangerZone) {
+    topDangerZone.setFillStyle(dangerColors.fill, dangerColors.fillAlpha);
+  }
+  if (topDangerLine) {
+    topDangerLine.setFillStyle(dangerColors.line, dangerColors.lineAlpha);
+  }
+  if (bottomDangerZone) {
+    bottomDangerZone.setFillStyle(dangerColors.fill, dangerColors.fillAlpha);
+  }
+  if (bottomDangerLine) {
+    bottomDangerLine.setFillStyle(dangerColors.line, dangerColors.lineAlpha);
+  }
+
+  // 更新分数文字颜色
+  if (scoreText) {
+    scoreText.setColor(uiColors.textPrimary);
+  }
+
+  // 重新生成平台纹理
+  if (platformSystem) {
+    platformSystem.regenerateTextures();
+  }
+
+  // 重新创建星星（使用新主题颜色）
+  clouds = createClouds(scene, GAME_WIDTH, GAME_HEIGHT);
 }
 
 
@@ -375,6 +481,13 @@ const hot = (import.meta as { hot?: { dispose: (cb: () => void) => void } })
     .hot;
 if (hot) {
     hot.dispose(() => {
+        // 取消主题订阅
+        if (unsubscribeTheme) {
+            unsubscribeTheme();
+            unsubscribeTheme = null;
+        }
+        // 清理音频系统
+        audioManager.destroy();
         globalScope.__FALLING_GAME__?.destroy(true);
         globalScope.__FALLING_GAME__ = undefined;
         phaserGame = null;
