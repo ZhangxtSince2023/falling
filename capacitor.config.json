@@ -1,6 +1,6 @@
 {
   "appId": "com.cheung.falling1",
-  "appName": "下落小球",
+  "appName": "Descend",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

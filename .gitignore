@@ -57,6 +57,8 @@ www/
 resources/*.png
 resources/*.jpg
 resources/*.jpeg
+!resources/icon.png
+!resources/splash.png
 !resources/ASSETS_README.md
 
 # Temporary files

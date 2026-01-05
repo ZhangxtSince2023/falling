@@ -2,6 +2,14 @@
 
 A casual mobile game where players control a ball descending through platforms, avoiding the top edge of the screen.
 
+## 中文简介（小游戏介绍）
+
+**《Descend》是一款休闲下落类小游戏**：你需要左右拖动/滑动屏幕，控制小球在平台之间不断下落，避免触碰到屏幕上边界，挑战更远的下落距离与更高分数。
+
+- **上手简单**：单指左右移动即可操作
+- **节奏紧凑**：平台+速度带来持续压迫感，“再来一局”很容易上头
+- **越玩越难**：平台间距与生成策略会随进度动态变化（避免“必死局/无聊局”）
+
 ## 项目结构
 
 ```
@@ -155,6 +163,18 @@ npm run dev
 - Apple Developer 账号（免费或付费）
 - CocoaPods（依赖管理工具）
 
+#### 图标与启动图（App Icon / Splash）
+
+- **源文件位置**：`resources/icon.png`（1024×1024 PNG，可选 `resources/splash.png`）
+- **重要说明**：`npm run build:ios` 只会构建 Web 并执行 `cap sync`，**不会自动把 `resources/icon.png` 生成/导入到 iOS 的 AppIcon**。
+- **更新图标/启动图的推荐方式**：按 `resources/ASSETS_README.md` 使用 `@capacitor/assets` 生成资源后再同步：
+
+```bash
+npm install @capacitor/assets --save-dev
+npx capacitor-assets generate
+npx cap sync ios
+```
+
 #### 初次设置步骤
 
 ```bash
@@ -175,6 +195,8 @@ cd ../..
 # 5. 打开 Xcode 项目
 npm run cap:open:ios
 ```
+
+> **注意**：App 图标已包含在仓库中，无需额外生成。如需更换图标，请参考上方「图标与启动图」章节。
 
 #### 在 Xcode 中配置签名
 
@@ -217,7 +239,21 @@ npm run cap:open:ios
 ```bash
 # 修改了代码后，构建并同步到 iOS
 npm run build:ios
+
+# 如果改了图标/启动图（resources/icon.png 或 resources/splash.png）
+# 需要先生成资源，再同步：
+# npx capacitor-assets generate
+# npx cap sync ios
 ```
+
+**什么时候需要额外步骤：**
+
+| 情况 | 操作 |
+|------|------|
+| 修改 JS/TS 代码 | `npm run build:ios` 然后 Xcode 编译 |
+| 修改 `resources/icon.png` | 先 `npx capacitor-assets generate`，再 `npx cap sync ios` |
+| 添加新的 Capacitor 插件 | `cd ios/App && pod install` |
+| 更新 Capacitor 版本 | `cd ios/App && pod install` |
 
 ### Android 开发设置
 
