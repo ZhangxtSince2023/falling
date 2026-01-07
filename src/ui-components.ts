@@ -47,7 +47,9 @@ export const UI_CONFIG = {
 };
 
 /**
- * 创建霓虹风格面板
+ * 创建面板 - 根据主题自动切换风格
+ * 深色主题：霓虹发光效果
+ * 浅色主题：玻璃拟态投影效果
  */
 export function createPanel(
   scene: Phaser.Scene,
@@ -63,28 +65,42 @@ export function createPanel(
     borderWidth?: number;
   }
 ): Phaser.GameObjects.Graphics {
+  const isDark = themeManager.isDark();
   const {
     bgColor = UI_CONFIG.colors.panelBg,
     bgAlpha = UI_CONFIG.colors.panelBgAlpha,
-    borderRadius = 8, // 更方正的边角
+    borderRadius = isDark ? 8 : 20, // 浅色主题更圆润
     borderColor = UI_CONFIG.colors.neonCyan,
-    borderWidth = 2,
+    borderWidth = isDark ? 2 : 1,   // 浅色主题边框更细
   } = options || {};
 
   const graphics = scene.add.graphics();
   const left = x - width / 2;
   const top = y - height / 2;
 
-  // 阴影/辉光层
-  graphics.fillStyle(borderColor, 0.15);
-  graphics.fillRoundedRect(left + 2, top + 2, width, height, borderRadius);
+  if (isDark) {
+    // 深色主题：霓虹发光效果
+    graphics.fillStyle(borderColor, 0.15);
+    graphics.fillRoundedRect(left + 2, top + 2, width, height, borderRadius);
+  } else {
+    // 浅色主题：柔和投影效果（多层叠加模拟毛玻璃阴影）
+    graphics.fillStyle(0x000000, 0.03);
+    graphics.fillRoundedRect(left + 4, top + 6, width, height, borderRadius);
+    graphics.fillStyle(0x000000, 0.05);
+    graphics.fillRoundedRect(left + 2, top + 3, width, height, borderRadius);
+  }
 
   // 主背景
   graphics.fillStyle(bgColor, bgAlpha);
   graphics.fillRoundedRect(left, top, width, height, borderRadius);
 
   // 边框
-  graphics.lineStyle(borderWidth, borderColor, 0.8);
+  if (isDark) {
+    graphics.lineStyle(borderWidth, borderColor, 0.8);
+  } else {
+    // 浅色主题：极淡的白色内边框（玻璃高光效果）
+    graphics.lineStyle(borderWidth, 0xFFFFFF, 0.6);
+  }
   graphics.strokeRoundedRect(left, top, width, height, borderRadius);
 
   graphics.setDepth(90);
@@ -92,7 +108,9 @@ export function createPanel(
 }
 
 /**
- * 创建带样式的文本
+ * 创建带样式的文本 - 根据主题自动切换风格
+ * 深色主题：带描边的霓虹文字
+ * 浅色主题：无描边，带柔和投影
  */
 export function createStyledText(
   scene: Phaser.Scene,
@@ -108,6 +126,7 @@ export function createStyledText(
     shadow?: boolean;
   }
 ): Phaser.GameObjects.Text {
+  const isDark = themeManager.isDark();
   const {
     fontSize = '32px',
     color = UI_CONFIG.colors.textPrimary,
@@ -127,8 +146,13 @@ export function createStyledText(
   });
 
   if (shadow) {
-    // Soft shadow
-    textObj.setShadow(2, 2, 'rgba(0,0,0,0.25)', 2, true, false);
+    if (isDark) {
+      // 深色主题：轻微阴影
+      textObj.setShadow(2, 2, 'rgba(0,0,0,0.25)', 2, true, false);
+    } else {
+      // 浅色主题：更明显的柔和投影（补偿无描边）
+      textObj.setShadow(2, 3, 'rgba(0,0,0,0.15)', 4, true, false);
+    }
   }
 
   textObj.setOrigin(0.5);
@@ -138,6 +162,8 @@ export function createStyledText(
 
 /**
  * 创建大号分数显示（只显示数字）
+ * 深色主题：带描边的霓虹数字
+ * 浅色主题：无描边，带柔和投影
  */
 export function createScoreDisplay(
   scene: Phaser.Scene,
@@ -145,17 +171,23 @@ export function createScoreDisplay(
   y: number,
   initialScore: number = 0
 ): Phaser.GameObjects.Text {
+  const isDark = themeManager.isDark();
   const scoreText = scene.add.text(x, y, String(initialScore), {
     fontSize: '64px',
     color: UI_CONFIG.colors.textPrimary,
     fontFamily: UI_CONFIG.fonts.number,
     fontStyle: '900', // Extra bold
     stroke: UI_CONFIG.colors.textStroke,
-    strokeThickness: UI_CONFIG.colors.textStrokeThickness * 2, // 分数描边稍微粗一点
+    strokeThickness: isDark ? UI_CONFIG.colors.textStrokeThickness * 2 : 0, // 浅色主题无描边
   });
 
-  // Soft shadow
-  scoreText.setShadow(2, 2, 'rgba(0,0,0,0.1)', 2, true, false);
+  if (isDark) {
+    scoreText.setShadow(2, 2, 'rgba(0,0,0,0.1)', 2, true, false);
+  } else {
+    // 浅色主题：更明显的柔和投影
+    scoreText.setShadow(2, 4, 'rgba(0,0,0,0.12)', 6, true, false);
+  }
+
   scoreText.setOrigin(0.5, 0);
   scoreText.setScrollFactor(0);
   scoreText.setDepth(100);
@@ -163,7 +195,9 @@ export function createScoreDisplay(
 }
 
 /**
- * 创建带动画的按钮
+ * 创建带动画的按钮 - 根据主题自动切换风格
+ * 深色主题：霓虹边框风格
+ * 浅色主题：玻璃拟态风格
  */
 export function createButton(
   scene: Phaser.Scene,
@@ -181,6 +215,7 @@ export function createButton(
     borderRadius?: number;
   }
 ): { container: Phaser.GameObjects.Container; text: Phaser.GameObjects.Text; bg: Phaser.GameObjects.Graphics } {
+  const isDark = themeManager.isDark();
   const {
     fontSize = '28px',
     color = UI_CONFIG.colors.textSuccess,
@@ -188,7 +223,7 @@ export function createButton(
     bgAlpha = UI_CONFIG.colors.buttonBgAlpha,
     paddingX = 30,
     paddingY = 15,
-    borderRadius = 15,
+    borderRadius = isDark ? 15 : 25, // 浅色主题更圆润
   } = options || {};
 
   // 创建文本（先创建以获取尺寸）
@@ -198,9 +233,14 @@ export function createButton(
     fontFamily: UI_CONFIG.fonts.primary,
     fontStyle: 'bold',
     stroke: UI_CONFIG.colors.textStroke,
-    strokeThickness: Math.max(2, UI_CONFIG.colors.textStrokeThickness - 1),
+    strokeThickness: isDark ? Math.max(2, UI_CONFIG.colors.textStrokeThickness - 1) : 0, // 浅色主题无描边
   });
   buttonText.setOrigin(0.5);
+
+  // 浅色主题按钮文字添加柔和阴影
+  if (!isDark) {
+    buttonText.setShadow(1, 2, 'rgba(0,0,0,0.1)', 2, true, false);
+  }
 
   // 计算背景尺寸
   const bgWidth = buttonText.width + paddingX * 2;
@@ -208,9 +248,22 @@ export function createButton(
 
   // 创建背景
   const bg = scene.add.graphics();
+
+  if (!isDark) {
+    // 浅色主题：添加柔和投影
+    bg.fillStyle(0x000000, 0.06);
+    bg.fillRoundedRect(-bgWidth / 2 + 2, -bgHeight / 2 + 4, bgWidth, bgHeight, borderRadius);
+  }
+
   bg.fillStyle(bgColor, bgAlpha);
   bg.fillRoundedRect(-bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight, borderRadius);
-  bg.lineStyle(3, UI_CONFIG.colors.buttonBorder, 0.8);
+
+  if (isDark) {
+    bg.lineStyle(3, UI_CONFIG.colors.buttonBorder, 0.8);
+  } else {
+    // 浅色主题：极淡的白色高光边框
+    bg.lineStyle(1.5, 0xFFFFFF, 0.7);
+  }
   bg.strokeRoundedRect(-bgWidth / 2, -bgHeight / 2, bgWidth, bgHeight, borderRadius);
 
   // 创建容器

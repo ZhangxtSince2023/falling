@@ -438,9 +438,10 @@ function onThemeChange(scene: Phaser.Scene, theme: Theme): void {
     bottomDangerLine.setFillStyle(dangerColors.line, dangerColors.lineAlpha);
   }
 
-  // 更新分数文字颜色
+  // 更新分数文字颜色和描边
   if (scoreText) {
     scoreText.setColor(uiColors.textPrimary);
+    scoreText.setStroke(uiColors.textStroke, theme.mode === 'dark' ? uiColors.textStrokeThickness * 2 : 0);
   }
 
   // 重新生成平台纹理
@@ -450,6 +451,20 @@ function onThemeChange(scene: Phaser.Scene, theme: Theme): void {
 
   // 重新创建星星（使用新主题颜色）
   clouds = createClouds(scene, GAME_WIDTH, GAME_HEIGHT);
+
+  // 重新创建开始界面（如果存在）
+  if (startScreenElements) {
+    safeDestroyAll(startScreenElements.allElements, 'startScreen-themeChange');
+    startScreenElements = createStartScreen(
+      scene,
+      GAME_WIDTH / 2,
+      GAME_HEIGHT / 2,
+      {
+        title: i18n.t('gameTitle') || 'Descend',
+        hint: i18n.t('tapToStart') || '点击屏幕开始游戏',
+      }
+    );
+  }
 }
 
 

@@ -1,5 +1,6 @@
 /**
- * 亮色主题配置 - 极简柔和风格（清爽蓝白）
+ * 亮色主题配置 - 玻璃拟态风格 (Glassmorphism)
+ * 设计理念：毛玻璃面板、柔和阴影、无霓虹发光、现代简约
  */
 import type { Theme } from './theme-types';
 
@@ -7,43 +8,43 @@ export const lightTheme: Theme = {
   mode: 'light',
   colors: {
     background: {
-      top: 0xE1F5FE,      // 极淡的蓝
-      bottom: 0xFFF3E0,   // 极淡的暖橙
-      htmlBg: '#E1F5FE',
+      top: 0xE8F4FD,      // 柔和天蓝
+      bottom: 0xFDF4E8,   // 柔和暖米
+      htmlBg: '#E8F4FD',
     },
     danger: {
-      fill: 0xFF5252,     // 红色
-      fillAlpha: 0.05,    // 极低透明度，只保留淡淡的红晕
-      line: 0xFF1744,     // 红色线条
-      lineAlpha: 0.2,     // 低透明度线条
+      fill: 0xFF6B6B,     // 柔和珊瑚红
+      fillAlpha: 0.08,    // 极低透明度
+      line: 0xFF6B6B,     // 统一色调
+      lineAlpha: 0.25,    // 柔和线条
     },
     platformSchemes: [
-      { primary: 0xFF7043, secondary: 0xFFCCBC }, // 柔和橙
-      { primary: 0x66BB6A, secondary: 0xC8E6C9 }, // 柔和绿
-      { primary: 0x42A5F5, secondary: 0xBBDEFB }, // 柔和蓝
-      { primary: 0xFFCA28, secondary: 0xFFECB3 }, // 柔和黄
-      { primary: 0xAB47BC, secondary: 0xE1BEE7 }, // 柔和紫
+      { primary: 0xFF8A65, secondary: 0xFFE0D6 }, // 珊瑚橙
+      { primary: 0x81C784, secondary: 0xD5EED7 }, // 薄荷绿
+      { primary: 0x64B5F6, secondary: 0xD6EBFC }, // 天空蓝
+      { primary: 0xFFD54F, secondary: 0xFFF3D0 }, // 向日葵黄
+      { primary: 0xBA68C8, secondary: 0xEDD6F2 }, // 薰衣草紫
     ],
     ui: {
       panelBg: 0xFFFFFF,
-      panelBgAlpha: 0.95,
+      panelBgAlpha: 0.75,       // 更透明，显示玻璃质感
       buttonBg: 0xFFFFFF,
-      buttonBgAlpha: 0.98,
-      buttonBorder: 0xE0E0E0,
-      textPrimary: '#455A64',   // 蓝灰色字体
-      textAccent: '#FF4081',    // 强调色
-      textSuccess: '#00E676',
-      textDanger: '#FF5252',
-      textStroke: '#FFFFFF',    // 白色描边，产生镂空或柔和感
-      textStrokeThickness: 4,
-      neonPrimary: 0x81D4FA,    // 亮色模式下不需要太强的霓虹
-      neonSecondary: 0xFF80AB,
+      buttonBgAlpha: 0.9,
+      buttonBorder: 0xE8E8E8,   // 极淡边框
+      textPrimary: '#1A1A2E',   // 深邃墨蓝（高对比度，易读）
+      textAccent: '#FF6B6B',    // 珊瑚强调色
+      textSuccess: '#00D9A5',   // 清新薄荷绿
+      textDanger: '#FF6B6B',    // 柔和红
+      textStroke: 'transparent', // 无描边！这是关键改变
+      textStrokeThickness: 0,    // 取消描边
+      neonPrimary: 0xE0E0E0,    // 浅灰（用于边框，非霓虹）
+      neonSecondary: 0xF5F5F5,
     },
     effects: {
-      trailColor: 0x29B6F6,
-      starColors: [0xFFE082, 0xA5D6A7, 0x90CAF9, 0xF48FB1],
-      particlePrimary: 0xFF7043,
-      particleSecondary: 0x29B6F6,
+      trailColor: 0x64B5F6,     // 天蓝色轨迹
+      starColors: [0xFFD54F, 0x81C784, 0x64B5F6, 0xBA68C8],
+      particlePrimary: 0xFF8A65,
+      particleSecondary: 0x64B5F6,
     },
   },
 };

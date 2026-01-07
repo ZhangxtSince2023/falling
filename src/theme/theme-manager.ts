@@ -108,6 +108,28 @@ class ThemeManager {
   refresh(): void {
     this.notifyListeners();
   }
+
+  // 手动切换主题（调试用）
+  toggleTheme(): void {
+    const newTheme = this.currentTheme.mode === 'dark' ? lightTheme : darkTheme;
+    this.currentTheme = newTheme;
+    this.updateHtmlBackground();
+    this.notifyListeners();
+  }
+
+  // 强制设置主题模式（调试用）
+  forceMode(mode: ThemeMode): void {
+    const newTheme = mode === 'dark' ? darkTheme : lightTheme;
+    if (this.currentTheme.mode === mode) return;
+    this.currentTheme = newTheme;
+    this.updateHtmlBackground();
+    this.notifyListeners();
+  }
 }
 
 export const themeManager = ThemeManager.getInstance();
+
+// 暴露到 window 用于调试
+if (typeof window !== 'undefined') {
+  (window as unknown as { themeManager: ThemeManager }).themeManager = themeManager;
+}
